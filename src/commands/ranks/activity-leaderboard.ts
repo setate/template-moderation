@@ -3,6 +3,7 @@ import {
     SlashCommandBuilder,
 } from 'discord.js';
 import { db } from '../../services/database';
+import { getTenureDays } from '../../services/ranking';
 
 export const data = new SlashCommandBuilder()
     .setName('activity-leaderboard')
@@ -16,7 +17,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
 
     await interaction.deferReply();
-    const activities = await db.memberActivity.findMany({ where: { guildId: interaction.guild.id } });
+    const guild = interaction.guild;
+    const activities = await db.memberActivity.findMany({ where: { guildId: guild.id } });
     const top = activities
         .filter(activity => activity.messageCount > 0)
         .sort((a, b) => b.messageCount - a.messageCount || a.userId.localeCompare(b.userId))
@@ -26,10 +28,19 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         return interaction.editReply('아직 집계된 메시지가 없습니다. 관리자가 `/활동통계수집`을 먼저 실행해 주세요.');
     }
 
+    const rankedMembers = await Promise.all(top.map(async activity => {
+        const member = guild.members.cache.get(activity.userId)
+            || await guild.members.fetch(activity.userId).catch(() => null);
+        return {
+            activity,
+            tenureDays: member ? getTenureDays(member) : null,
+        };
+    }));
     const medal = ['🥇', '🥈', '🥉'];
-    const lines = top.map((activity, index) => {
+    const lines = rankedMembers.map(({ activity, tenureDays }, index) => {
         const rank = medal[index] || `**${index + 1}.**`;
-        return `${rank} <@${activity.userId}> — **${activity.messageCount.toLocaleString()}개**`;
+        const tenure = tenureDays === null ? '현재 서버에 없음' : `체류 **${tenureDays.toLocaleString()}일**`;
+        return `${rank} <@${activity.userId}> — **${activity.messageCount.toLocaleString()}개** · ${tenure}`;
     });
 
     return interaction.editReply({
