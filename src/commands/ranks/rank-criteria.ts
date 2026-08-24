@@ -24,9 +24,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         content: withPrivateNotice([
             '## 🎓 자동 등급 기준',
             ...criteria,
-            '',
-            '체류기간과 메시지 수를 **모두 충족**해야 다음 등급으로 올라갑니다.',
-            '메시지는 봇이 읽을 수 있는 서버 채널에서 작성한 내용만 집계됩니다.',
         ].join('\n')),
         ephemeral: true,
     });
