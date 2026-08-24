@@ -15,6 +15,10 @@ import * as purge from "./moderation/purge";
 import * as kick from "./moderation/kick";
 import * as ban from "./moderation/ban";
 
+// Activity rank commands
+import * as rankStatus from "./ranks/rank-status";
+import * as activityScan from "./ranks/activity-scan";
+
 export const commands = {
     ping,
     "welcome-setup": welcomeSetup,
@@ -26,4 +30,6 @@ export const commands = {
     purge,
     kick,
     ban,
+    "rank-status": rankStatus,
+    "activity-scan": activityScan,
 };

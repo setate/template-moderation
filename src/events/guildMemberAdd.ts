@@ -4,6 +4,12 @@ import { t } from "../services/localization";
 import { createEmbed } from "../utils/embed";
 
 export async function handleGuildMemberAdd(member: GuildMember) {
+    await db.memberActivity.upsert({
+        where: { guildId_userId: { guildId: member.guild.id, userId: member.id } },
+        update: {},
+        create: { guildId: member.guild.id, userId: member.id, messageCount: 0 },
+    });
+
     const guildConfig = await db.guild.findUnique({
         where: { id: member.guild.id },
     });

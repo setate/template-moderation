@@ -44,6 +44,8 @@ const reactionRolePanel = __importStar(require("./roles/reaction-role-panel"));
 const purge = __importStar(require("./moderation/purge"));
 const kick = __importStar(require("./moderation/kick"));
 const ban = __importStar(require("./moderation/ban"));
+const rankStatus = __importStar(require("./ranks/rank-status"));
+const activityScan = __importStar(require("./ranks/activity-scan"));
 exports.commands = {
     ping,
     "welcome-setup": welcomeSetup,
@@ -55,4 +57,6 @@ exports.commands = {
     purge,
     kick,
     ban,
+    "rank-status": rankStatus,
+    "activity-scan": activityScan,
 };

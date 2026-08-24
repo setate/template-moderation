@@ -5,6 +5,11 @@ const database_1 = require("../services/database");
 const localization_1 = require("../services/localization");
 const embed_1 = require("../utils/embed");
 async function handleGuildMemberAdd(member) {
+    await database_1.db.memberActivity.upsert({
+        where: { guildId_userId: { guildId: member.guild.id, userId: member.id } },
+        update: {},
+        create: { guildId: member.guild.id, userId: member.id, messageCount: 0 },
+    });
     const guildConfig = await database_1.db.guild.findUnique({
         where: { id: member.guild.id },
     });

@@ -2,10 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.data = void 0;
 exports.execute = execute;
-const builders_1 = require("@discordjs/builders");
-exports.data = new builders_1.SlashCommandBuilder()
+const discord_js_1 = require("discord.js");
+exports.data = new discord_js_1.SlashCommandBuilder()
     .setName('ping')
     .setDescription('ping');
 async function execute(interaction) {
-    return 'pong';
+    return interaction.reply({ content: 'pong! 🏓', ephemeral: true });
 }

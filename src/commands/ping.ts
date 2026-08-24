@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from '@discordjs/builders';
-import { ChatInputCommandInteraction } from 'discord.js';
+import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
 
 // 명령어 정의
 export const data = new SlashCommandBuilder()
@@ -10,5 +9,5 @@ export const data = new SlashCommandBuilder()
  * ping 명령어 실행
  */
 export async function execute(interaction: ChatInputCommandInteraction) {
-    return 'pong';
+    return interaction.reply({ content: 'pong! 🏓', ephemeral: true });
 }
