@@ -3,6 +3,7 @@ import { config } from "./config";
 import { commands } from "./commands";
 import { deployCommands } from "./deploy-commands";
 import { startScheduledJobs } from "./scheduler";
+import { withPrivateNotice } from "./utils/private-response";
 
 // Event handlers
 import { handleMessageCreate } from "./events/messageCreate";
@@ -54,9 +55,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
             console.error(`Error executing command ${interaction.commandName}:`, error);
 
             // 이미 응답된 경우 followUp 사용
-            const replyMethod = interaction.replied ? 'followUp' : 'reply';
+            const replyMethod = interaction.replied || interaction.deferred ? 'followUp' : 'reply';
             await interaction[replyMethod]({
-                content: '명령어 실행 중 오류가 발생했습니다.',
+                content: withPrivateNotice('명령어 실행 중 오류가 발생했습니다.'),
                 ephemeral: true
             });
         });

@@ -4,6 +4,7 @@ import {
 } from 'discord.js';
 import { db } from '../../services/database';
 import { getTenureDays } from '../../services/ranking';
+import { withPrivateNotice } from '../../utils/private-response';
 
 export const data = new SlashCommandBuilder()
     .setName('activity-leaderboard')
@@ -13,10 +14,10 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guild) {
-        return interaction.reply({ content: '서버에서만 사용할 수 있습니다.', ephemeral: true });
+        return interaction.reply({ content: withPrivateNotice('서버에서만 사용할 수 있습니다.'), ephemeral: true });
     }
 
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral: true });
     const guild = interaction.guild;
     const activities = await db.memberActivity.findMany({ where: { guildId: guild.id } });
     const top = activities
@@ -25,7 +26,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         .slice(0, 20);
 
     if (top.length === 0) {
-        return interaction.editReply('아직 집계된 메시지가 없습니다. 관리자가 `/활동통계수집`을 먼저 실행해 주세요.');
+        return interaction.editReply(withPrivateNotice('아직 집계된 메시지가 없습니다. 관리자가 `/활동통계수집`을 먼저 실행해 주세요.'));
     }
 
     const rankedMembers = await Promise.all(top.map(async activity => {
@@ -44,7 +45,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     });
 
     return interaction.editReply({
-        content: [`## 📊 활동 순위 TOP 20`, ...lines].join('\n'),
+        content: withPrivateNotice([`## 📊 활동 순위 TOP 20`, ...lines].join('\n')),
         allowedMentions: { users: [] },
     });
 }

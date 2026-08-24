@@ -5,6 +5,7 @@ exports.execute = execute;
 const discord_js_1 = require("discord.js");
 const localization_1 = require("../../services/localization");
 const embed_1 = require("../../utils/embed");
+const private_response_1 = require("../../utils/private-response");
 exports.data = new discord_js_1.SlashCommandBuilder()
     .setName("reaction-role-panel")
     .setNameLocalizations({ ko: (0, localization_1.t)("commands.reaction-role-panel.name") })
@@ -26,7 +27,7 @@ exports.data = new discord_js_1.SlashCommandBuilder()
 async function execute(interaction) {
     if (!interaction.channel || !(interaction.channel instanceof discord_js_1.TextChannel)) {
         return interaction.reply({
-            content: (0, localization_1.t)("errors.guild_only"),
+            content: (0, private_response_1.withPrivateNotice)((0, localization_1.t)("errors.guild_only")),
             ephemeral: true,
         });
     }
@@ -37,6 +38,7 @@ async function execute(interaction) {
         .setDescription(description);
     const message = await interaction.channel.send({ embeds: [panelEmbed] });
     return interaction.reply({
+        content: private_response_1.PRIVATE_RESPONSE_NOTICE,
         embeds: [(0, embed_1.successEmbed)((0, localization_1.t)("commands.reaction-role-panel.panel_created", { messageId: message.id }))],
         ephemeral: true,
     });

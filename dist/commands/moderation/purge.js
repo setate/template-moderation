@@ -6,6 +6,7 @@ const discord_js_1 = require("discord.js");
 const database_1 = require("../../services/database");
 const localization_1 = require("../../services/localization");
 const embed_1 = require("../../utils/embed");
+const private_response_1 = require("../../utils/private-response");
 exports.data = new discord_js_1.SlashCommandBuilder()
     .setName("purge")
     .setNameLocalizations({ ko: (0, localization_1.t)("commands.purge.name") })
@@ -23,6 +24,7 @@ exports.data = new discord_js_1.SlashCommandBuilder()
 async function execute(interaction) {
     if (!interaction.guildId || !interaction.channel || !(interaction.channel instanceof discord_js_1.TextChannel)) {
         return interaction.reply({
+            content: private_response_1.PRIVATE_RESPONSE_NOTICE,
             embeds: [(0, embed_1.errorEmbed)((0, localization_1.t)("errors.guild_only"))],
             ephemeral: true,
         });
@@ -30,6 +32,7 @@ async function execute(interaction) {
     const amount = interaction.options.getInteger("amount", true);
     if (amount < 1 || amount > 100) {
         return interaction.reply({
+            content: private_response_1.PRIVATE_RESPONSE_NOTICE,
             embeds: [(0, embed_1.errorEmbed)((0, localization_1.t)("commands.purge.error_amount"))],
             ephemeral: true,
         });
@@ -51,6 +54,7 @@ async function execute(interaction) {
             },
         });
         return interaction.reply({
+            content: private_response_1.PRIVATE_RESPONSE_NOTICE,
             embeds: [(0, embed_1.successEmbed)((0, localization_1.t)("commands.purge.success", { count: deleted.size.toString() }))],
             ephemeral: true,
         });
@@ -58,6 +62,7 @@ async function execute(interaction) {
     catch (error) {
         console.error("Purge error:", error);
         return interaction.reply({
+            content: private_response_1.PRIVATE_RESPONSE_NOTICE,
             embeds: [(0, embed_1.errorEmbed)((0, localization_1.t)("commands.purge.error_old_messages"))],
             ephemeral: true,
         });

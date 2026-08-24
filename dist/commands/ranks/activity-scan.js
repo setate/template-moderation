@@ -5,6 +5,7 @@ exports.execute = execute;
 const discord_js_1 = require("discord.js");
 const activity_1 = require("../../services/activity");
 const ranking_1 = require("../../services/ranking");
+const private_response_1 = require("../../utils/private-response");
 exports.data = new discord_js_1.SlashCommandBuilder()
     .setName('activity-scan')
     .setNameLocalizations({ ko: '활동통계수집' })
@@ -13,11 +14,11 @@ exports.data = new discord_js_1.SlashCommandBuilder()
     .setDefaultMemberPermissions(discord_js_1.PermissionFlagsBits.ManageGuild);
 async function execute(interaction) {
     if (!interaction.guild) {
-        return interaction.reply({ content: '서버에서만 사용할 수 있습니다.', ephemeral: true });
+        return interaction.reply({ content: (0, private_response_1.withPrivateNotice)('서버에서만 사용할 수 있습니다.'), ephemeral: true });
     }
     const guild = interaction.guild;
     if ((0, activity_1.isHistoricalScanActive)(guild.id)) {
-        return interaction.reply({ content: '이 서버의 활동 통계를 이미 수집 중입니다.', ephemeral: true });
+        return interaction.reply({ content: (0, private_response_1.withPrivateNotice)('이 서버의 활동 통계를 이미 수집 중입니다.'), ephemeral: true });
     }
     await interaction.deferReply({ ephemeral: true });
     (0, activity_1.beginHistoricalScan)(guild.id);
@@ -70,7 +71,7 @@ async function execute(interaction) {
                 skippedChannels += 1;
                 console.error(`[activity-scan] #${textChannel.name} 수집 실패:`, error);
             }
-            await interaction.editReply(`과거 메시지를 수집 중입니다…\n채널 ${scannedChannels}/${channels.size}, 메시지 ${scannedMessages.toLocaleString()}개`).catch(() => undefined);
+            await interaction.editReply((0, private_response_1.withPrivateNotice)(`과거 메시지를 수집 중입니다…\n채널 ${scannedChannels}/${channels.size}, 메시지 ${scannedMessages.toLocaleString()}개`)).catch(() => undefined);
         }
         const finalCounts = await (0, activity_1.finishHistoricalScan)(guild.id, counts);
         scanFinished = true;
@@ -89,7 +90,7 @@ async function execute(interaction) {
                 console.error(`[activity-scan] ${member.user.tag} 역할 변경 실패:`, error);
             }
         }
-        return interaction.editReply([
+        return interaction.editReply((0, private_response_1.withPrivateNotice)([
             '활동 통계 수집을 완료했습니다.',
             `수집 채널: ${scannedChannels}개`,
             `권한 부족/오류로 건너뜀: ${skippedChannels}개`,
@@ -97,12 +98,12 @@ async function execute(interaction) {
             `집계된 사용자: ${finalCounts.size.toLocaleString()}명`,
             `역할이 변경된 사용자: ${changedMembers.toLocaleString()}명`,
             `권한/역할 순서 문제로 변경 실패: ${failedRoleChanges.toLocaleString()}명`,
-        ].join('\n'));
+        ].join('\n')));
     }
     catch (error) {
         console.error('[activity-scan] 전체 수집 실패:', error);
         const message = error instanceof Error ? error.message : String(error);
-        return interaction.editReply(`활동 통계 수집 중 오류가 발생했습니다: ${message.slice(0, 500)}`);
+        return interaction.editReply((0, private_response_1.withPrivateNotice)(`활동 통계 수집 중 오류가 발생했습니다: ${message.slice(0, 500)}`));
     }
     finally {
         if (!scanFinished)

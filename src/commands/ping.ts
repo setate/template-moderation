@@ -1,4 +1,5 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
+import { withPrivateNotice } from '../utils/private-response';
 
 // 명령어 정의
 export const data = new SlashCommandBuilder()
@@ -9,5 +10,5 @@ export const data = new SlashCommandBuilder()
  * ping 명령어 실행
  */
 export async function execute(interaction: ChatInputCommandInteraction) {
-    return interaction.reply({ content: 'pong! 🏓', ephemeral: true });
+    return interaction.reply({ content: withPrivateNotice('pong! 🏓'), ephemeral: true });
 }

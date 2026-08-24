@@ -6,6 +6,7 @@ import {
 } from "discord.js";
 import { t } from "../../services/localization";
 import { createEmbed, successEmbed } from "../../utils/embed";
+import { PRIVATE_RESPONSE_NOTICE, withPrivateNotice } from "../../utils/private-response";
 
 export const data = new SlashCommandBuilder()
     .setName("reaction-role-panel")
@@ -33,7 +34,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.channel || !(interaction.channel instanceof TextChannel)) {
         return interaction.reply({
-            content: t("errors.guild_only"),
+            content: withPrivateNotice(t("errors.guild_only")),
             ephemeral: true,
         });
     }
@@ -48,6 +49,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const message = await interaction.channel.send({ embeds: [panelEmbed] });
 
     return interaction.reply({
+        content: PRIVATE_RESPONSE_NOTICE,
         embeds: [successEmbed(t("commands.reaction-role-panel.panel_created", { messageId: message.id }))],
         ephemeral: true,
     });

@@ -5,6 +5,7 @@ const config_1 = require("./config");
 const commands_1 = require("./commands");
 const deploy_commands_1 = require("./deploy-commands");
 const scheduler_1 = require("./scheduler");
+const private_response_1 = require("./utils/private-response");
 const messageCreate_1 = require("./events/messageCreate");
 const guildMemberAdd_1 = require("./events/guildMemberAdd");
 const guildMemberRemove_1 = require("./events/guildMemberRemove");
@@ -38,9 +39,9 @@ client.on(discord_js_1.Events.InteractionCreate, async (interaction) => {
             return;
         await command.execute(interaction).catch(async (error) => {
             console.error(`Error executing command ${interaction.commandName}:`, error);
-            const replyMethod = interaction.replied ? 'followUp' : 'reply';
+            const replyMethod = interaction.replied || interaction.deferred ? 'followUp' : 'reply';
             await interaction[replyMethod]({
-                content: '명령어 실행 중 오류가 발생했습니다.',
+                content: (0, private_response_1.withPrivateNotice)('명령어 실행 중 오류가 발생했습니다.'),
                 ephemeral: true
             });
         });

@@ -6,6 +6,7 @@ const discord_js_1 = require("discord.js");
 const database_1 = require("../../services/database");
 const localization_1 = require("../../services/localization");
 const embed_1 = require("../../utils/embed");
+const private_response_1 = require("../../utils/private-response");
 exports.data = new discord_js_1.SlashCommandBuilder()
     .setName("leave-setup")
     .setNameLocalizations({ ko: (0, localization_1.t)("commands.leave-setup.name") })
@@ -27,6 +28,7 @@ exports.data = new discord_js_1.SlashCommandBuilder()
 async function execute(interaction) {
     if (!interaction.guildId) {
         return interaction.reply({
+            content: private_response_1.PRIVATE_RESPONSE_NOTICE,
             embeds: [(0, embed_1.errorEmbed)((0, localization_1.t)("errors.guild_only"))],
             ephemeral: true,
         });
@@ -46,6 +48,7 @@ async function execute(interaction) {
         },
     });
     return interaction.reply({
+        content: private_response_1.PRIVATE_RESPONSE_NOTICE,
         embeds: [(0, embed_1.successEmbed)((0, localization_1.t)("commands.leave-setup.success"))],
         ephemeral: true,
     });

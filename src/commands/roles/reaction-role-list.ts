@@ -6,6 +6,7 @@ import {
 import { db } from "../../services/database";
 import { t } from "../../services/localization";
 import { createEmbed } from "../../utils/embed";
+import { PRIVATE_RESPONSE_NOTICE, withPrivateNotice } from "../../utils/private-response";
 
 export const data = new SlashCommandBuilder()
     .setName("reaction-role-list")
@@ -17,7 +18,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guildId) {
         return interaction.reply({
-            content: t("errors.guild_only"),
+            content: withPrivateNotice(t("errors.guild_only")),
             ephemeral: true,
         });
     }
@@ -42,5 +43,5 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         embed.setFooter({ text: t("commands.reaction-role-list.footer", { count: reactionRoles.length.toString() }) });
     }
 
-    return interaction.reply({ embeds: [embed], ephemeral: true });
+    return interaction.reply({ content: PRIVATE_RESPONSE_NOTICE, embeds: [embed], ephemeral: true });
 }

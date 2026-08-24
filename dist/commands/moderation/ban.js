@@ -6,6 +6,7 @@ const discord_js_1 = require("discord.js");
 const database_1 = require("../../services/database");
 const localization_1 = require("../../services/localization");
 const embed_1 = require("../../utils/embed");
+const private_response_1 = require("../../utils/private-response");
 exports.data = new discord_js_1.SlashCommandBuilder()
     .setName("ban")
     .setNameLocalizations({ ko: (0, localization_1.t)("commands.ban.name") })
@@ -35,6 +36,7 @@ exports.data = new discord_js_1.SlashCommandBuilder()
 async function execute(interaction) {
     if (!interaction.guildId || !interaction.guild) {
         return interaction.reply({
+            content: private_response_1.PRIVATE_RESPONSE_NOTICE,
             embeds: [(0, embed_1.errorEmbed)((0, localization_1.t)("errors.guild_only"))],
             ephemeral: true,
         });
@@ -45,6 +47,7 @@ async function execute(interaction) {
     const executor = interaction.member;
     if (targetUser.id === interaction.user.id) {
         return interaction.reply({
+            content: private_response_1.PRIVATE_RESPONSE_NOTICE,
             embeds: [(0, embed_1.errorEmbed)((0, localization_1.t)("commands.ban.error_self"))],
             ephemeral: true,
         });
@@ -58,6 +61,7 @@ async function execute(interaction) {
     if (targetMember) {
         if (targetMember.roles.highest.position >= executor.roles.highest.position) {
             return interaction.reply({
+                content: private_response_1.PRIVATE_RESPONSE_NOTICE,
                 embeds: [(0, embed_1.errorEmbed)((0, localization_1.t)("commands.ban.error_hierarchy"))],
                 ephemeral: true,
             });
@@ -65,6 +69,7 @@ async function execute(interaction) {
         const botMember = await interaction.guild.members.fetchMe();
         if (targetMember.roles.highest.position >= botMember.roles.highest.position) {
             return interaction.reply({
+                content: private_response_1.PRIVATE_RESPONSE_NOTICE,
                 embeds: [(0, embed_1.errorEmbed)((0, localization_1.t)("commands.ban.error_bot_hierarchy"))],
                 ephemeral: true,
             });
@@ -90,12 +95,15 @@ async function execute(interaction) {
             },
         });
         return interaction.reply({
+            content: private_response_1.PRIVATE_RESPONSE_NOTICE,
             embeds: [(0, embed_1.successEmbed)((0, localization_1.t)("commands.ban.success", { user: targetUser.tag, reason }))],
+            ephemeral: true,
         });
     }
     catch (error) {
         console.error("Ban error:", error);
         return interaction.reply({
+            content: private_response_1.PRIVATE_RESPONSE_NOTICE,
             embeds: [(0, embed_1.errorEmbed)((0, localization_1.t)("errors.unknown_error"))],
             ephemeral: true,
         });

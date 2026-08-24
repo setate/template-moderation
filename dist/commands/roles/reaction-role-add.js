@@ -6,6 +6,7 @@ const discord_js_1 = require("discord.js");
 const database_1 = require("../../services/database");
 const localization_1 = require("../../services/localization");
 const embed_1 = require("../../utils/embed");
+const private_response_1 = require("../../utils/private-response");
 exports.data = new discord_js_1.SlashCommandBuilder()
     .setName("reaction-role-add")
     .setNameLocalizations({ ko: (0, localization_1.t)("commands.reaction-role-add.name") })
@@ -33,6 +34,7 @@ exports.data = new discord_js_1.SlashCommandBuilder()
 async function execute(interaction) {
     if (!interaction.guildId || !interaction.channel) {
         return interaction.reply({
+            content: private_response_1.PRIVATE_RESPONSE_NOTICE,
             embeds: [(0, embed_1.errorEmbed)((0, localization_1.t)("errors.guild_only"))],
             ephemeral: true,
         });
@@ -46,6 +48,7 @@ async function execute(interaction) {
     }
     catch (error) {
         return interaction.reply({
+            content: private_response_1.PRIVATE_RESPONSE_NOTICE,
             embeds: [(0, embed_1.errorEmbed)((0, localization_1.t)("commands.reaction-role-add.error_message_not_found"))],
             ephemeral: true,
         });
@@ -60,6 +63,7 @@ async function execute(interaction) {
     });
     if (existing) {
         return interaction.reply({
+            content: private_response_1.PRIVATE_RESPONSE_NOTICE,
             embeds: [(0, embed_1.errorEmbed)((0, localization_1.t)("commands.reaction-role-add.error_already_exists"))],
             ephemeral: true,
         });
@@ -80,6 +84,7 @@ async function execute(interaction) {
         console.error("Failed to react:", error);
     }
     return interaction.reply({
+        content: private_response_1.PRIVATE_RESPONSE_NOTICE,
         embeds: [(0, embed_1.successEmbed)((0, localization_1.t)("commands.reaction-role-add.success", { emoji, role: role.toString() }))],
         ephemeral: true,
     });

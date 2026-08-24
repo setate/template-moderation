@@ -4,6 +4,7 @@ import {
 } from 'discord.js';
 import { db } from '../../services/database';
 import { RANKS } from '../../services/ranking';
+import { withPrivateNotice } from '../../utils/private-response';
 
 export const data = new SlashCommandBuilder()
     .setName('activity-summary')
@@ -13,10 +14,10 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guild) {
-        return interaction.reply({ content: '서버에서만 사용할 수 있습니다.', ephemeral: true });
+        return interaction.reply({ content: withPrivateNotice('서버에서만 사용할 수 있습니다.'), ephemeral: true });
     }
 
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral: true });
     const guild = interaction.guild;
     const activities = await db.memberActivity.findMany({ where: { guildId: guild.id } });
     const active = activities.filter(activity => activity.messageCount > 0);
@@ -47,7 +48,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         : '집계 기록 없음';
 
     return interaction.editReply({
-        content: [
+        content: withPrivateNotice([
             `## 📈 ${guild.name} 전체 통계`,
             `서버 멤버: **${guild.memberCount.toLocaleString()}명**`,
             `집계된 활동 사용자: **${active.length.toLocaleString()}명**`,
@@ -59,7 +60,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             ...rankLines,
             '',
             `최근 통계 갱신: ${updatedText}`,
-        ].join('\n'),
+        ].join('\n')),
         allowedMentions: { parse: [] },
     });
 }

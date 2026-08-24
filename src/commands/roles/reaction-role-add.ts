@@ -8,6 +8,7 @@ import {
 import { db } from "../../services/database";
 import { t } from "../../services/localization";
 import { successEmbed, errorEmbed } from "../../utils/embed";
+import { PRIVATE_RESPONSE_NOTICE } from "../../utils/private-response";
 
 export const data = new SlashCommandBuilder()
     .setName("reaction-role-add")
@@ -43,6 +44,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guildId || !interaction.channel) {
         return interaction.reply({
+            content: PRIVATE_RESPONSE_NOTICE,
             embeds: [errorEmbed(t("errors.guild_only"))],
             ephemeral: true,
         });
@@ -58,6 +60,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         message = await interaction.channel.messages.fetch(messageId);
     } catch (error) {
         return interaction.reply({
+            content: PRIVATE_RESPONSE_NOTICE,
             embeds: [errorEmbed(t("commands.reaction-role-add.error_message_not_found"))],
             ephemeral: true,
         });
@@ -75,6 +78,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     if (existing) {
         return interaction.reply({
+            content: PRIVATE_RESPONSE_NOTICE,
             embeds: [errorEmbed(t("commands.reaction-role-add.error_already_exists"))],
             ephemeral: true,
         });
@@ -100,6 +104,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
 
     return interaction.reply({
+        content: PRIVATE_RESPONSE_NOTICE,
         embeds: [successEmbed(t("commands.reaction-role-add.success", { emoji, role: role.toString() }))],
         ephemeral: true,
     });

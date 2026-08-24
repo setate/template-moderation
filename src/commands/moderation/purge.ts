@@ -7,6 +7,7 @@ import {
 import { db } from "../../services/database";
 import { t } from "../../services/localization";
 import { successEmbed, errorEmbed } from "../../utils/embed";
+import { PRIVATE_RESPONSE_NOTICE } from "../../utils/private-response";
 
 export const data = new SlashCommandBuilder()
     .setName("purge")
@@ -28,6 +29,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guildId || !interaction.channel || !(interaction.channel instanceof TextChannel)) {
         return interaction.reply({
+            content: PRIVATE_RESPONSE_NOTICE,
             embeds: [errorEmbed(t("errors.guild_only"))],
             ephemeral: true,
         });
@@ -37,6 +39,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     if (amount < 1 || amount > 100) {
         return interaction.reply({
+            content: PRIVATE_RESPONSE_NOTICE,
             embeds: [errorEmbed(t("commands.purge.error_amount"))],
             ephemeral: true,
         });
@@ -64,12 +67,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         });
 
         return interaction.reply({
+            content: PRIVATE_RESPONSE_NOTICE,
             embeds: [successEmbed(t("commands.purge.success", { count: deleted.size.toString() }))],
             ephemeral: true,
         });
     } catch (error) {
         console.error("Purge error:", error);
         return interaction.reply({
+            content: PRIVATE_RESPONSE_NOTICE,
             embeds: [errorEmbed(t("commands.purge.error_old_messages"))],
             ephemeral: true,
         });
