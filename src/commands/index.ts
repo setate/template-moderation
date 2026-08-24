@@ -17,6 +17,7 @@ import * as ban from "./moderation/ban";
 
 // Activity rank commands
 import * as rankStatus from "./ranks/rank-status";
+import * as rankCriteria from "./ranks/rank-criteria";
 import * as activityScan from "./ranks/activity-scan";
 import * as activityLeaderboard from "./ranks/activity-leaderboard";
 import * as activitySummary from "./ranks/activity-summary";
@@ -33,6 +34,7 @@ export const commands = {
     kick,
     ban,
     "rank-status": rankStatus,
+    "rank-criteria": rankCriteria,
     "activity-scan": activityScan,
     "activity-leaderboard": activityLeaderboard,
     "activity-summary": activitySummary,

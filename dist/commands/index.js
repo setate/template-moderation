@@ -45,6 +45,7 @@ const purge = __importStar(require("./moderation/purge"));
 const kick = __importStar(require("./moderation/kick"));
 const ban = __importStar(require("./moderation/ban"));
 const rankStatus = __importStar(require("./ranks/rank-status"));
+const rankCriteria = __importStar(require("./ranks/rank-criteria"));
 const activityScan = __importStar(require("./ranks/activity-scan"));
 const activityLeaderboard = __importStar(require("./ranks/activity-leaderboard"));
 const activitySummary = __importStar(require("./ranks/activity-summary"));
@@ -60,6 +61,7 @@ exports.commands = {
     kick,
     ban,
     "rank-status": rankStatus,
+    "rank-criteria": rankCriteria,
     "activity-scan": activityScan,
     "activity-leaderboard": activityLeaderboard,
     "activity-summary": activitySummary,
