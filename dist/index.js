@@ -20,13 +20,12 @@ const client = new discord_js_1.Client({
     ],
     partials: [discord_js_1.Partials.Message, discord_js_1.Partials.Channel, discord_js_1.Partials.Reaction],
 });
-client.once(discord_js_1.Events.ClientReady, () => {
+client.once(discord_js_1.Events.ClientReady, async () => {
     console.log(`Discord bot is ready! 🤖`);
     console.log(`Logged in as ${client.user.tag}!`);
     client.user?.setActivity('Activity', { type: 3 });
     console.log("Started refreshing application (/) commands.");
-    (0, deploy_commands_1.deployCommands)();
-    console.log("Successfully reloaded application (/) commands.");
+    await (0, deploy_commands_1.deployCommands)();
     (0, scheduler_1.startScheduledJobs)(client);
     console.log("스케줄러가 시작되었습니다.");
 });

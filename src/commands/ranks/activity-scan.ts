@@ -101,10 +101,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         await guild.roles.fetch();
         const members = await guild.members.fetch();
         let changedMembers = 0;
+        let failedRoleChanges = 0;
 
         for (const member of members.values()) {
-            if (await syncMemberRank(member, finalCounts.get(member.id) || 0)) {
-                changedMembers += 1;
+            try {
+                if (await syncMemberRank(member, finalCounts.get(member.id) || 0)) {
+                    changedMembers += 1;
+                }
+            } catch (error) {
+                failedRoleChanges += 1;
+                console.error(`[activity-scan] ${member.user.tag} 역할 변경 실패:`, error);
             }
         }
 
@@ -115,10 +121,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             `확인한 메시지: ${scannedMessages.toLocaleString()}개`,
             `집계된 사용자: ${finalCounts.size.toLocaleString()}명`,
             `역할이 변경된 사용자: ${changedMembers.toLocaleString()}명`,
+            `권한/역할 순서 문제로 변경 실패: ${failedRoleChanges.toLocaleString()}명`,
         ].join('\n'));
     } catch (error) {
         console.error('[activity-scan] 전체 수집 실패:', error);
-        return interaction.editReply('활동 통계 수집 중 오류가 발생했습니다. 콘솔 로그를 확인해 주세요.');
+        const message = error instanceof Error ? error.message : String(error);
+        return interaction.editReply(
+            `활동 통계 수집 중 오류가 발생했습니다: ${message.slice(0, 500)}`
+        );
     } finally {
         if (!scanFinished) cancelHistoricalScan(guild.id);
     }

@@ -24,7 +24,7 @@ const client = new Client({
 });
 
 // 봇이 준비되었을 때의 이벤트 핸들러
-client.once(Events.ClientReady, () => {
+client.once(Events.ClientReady, async () => {
     console.log(`Discord bot is ready! 🤖`);
     console.log(`Logged in as ${client.user!.tag}!`);
 
@@ -33,8 +33,7 @@ client.once(Events.ClientReady, () => {
 
     // 명령어 갱신
     console.log("Started refreshing application (/) commands.");
-    deployCommands();
-    console.log("Successfully reloaded application (/) commands.");
+    await deployCommands();
 
     // 스케줄러 시작
     startScheduledJobs(client);

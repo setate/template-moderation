@@ -46,6 +46,8 @@ const kick = __importStar(require("./moderation/kick"));
 const ban = __importStar(require("./moderation/ban"));
 const rankStatus = __importStar(require("./ranks/rank-status"));
 const activityScan = __importStar(require("./ranks/activity-scan"));
+const activityLeaderboard = __importStar(require("./ranks/activity-leaderboard"));
+const activitySummary = __importStar(require("./ranks/activity-summary"));
 exports.commands = {
     ping,
     "welcome-setup": welcomeSetup,
@@ -59,4 +61,6 @@ exports.commands = {
     ban,
     "rank-status": rankStatus,
     "activity-scan": activityScan,
+    "activity-leaderboard": activityLeaderboard,
+    "activity-summary": activitySummary,
 };
