@@ -95,15 +95,17 @@ export async function execute(interaction: MessageContextMenuCommandInteraction)
         const registrationNotice = sourceMessage.author.id === interaction.user.id
             ? `📢 <@${interaction.user.id}>님이 홍보로 등록했습니다.`
             : `📢 관리자 <@${interaction.user.id}>님이 <@${sourceMessage.author.id}>님의 메시지를 홍보로 등록했습니다.`;
-        const posted = await promotionChannel.send({
+        const notice = await promotionChannel.send({
             content: registrationNotice,
-            forward: {
-                message: sourceMessage.id,
-                channel: sourceMessage.channelId,
-                guild: interaction.guildId,
-            },
             allowedMentions: { parse: [] },
         });
+        let posted;
+        try {
+            posted = await sourceMessage.forward(promotionChannel);
+        } catch (error) {
+            await notice.delete().catch(() => undefined);
+            throw error;
+        }
         const displayName = interaction.member && "displayName" in interaction.member
             ? interaction.member.displayName
             : interaction.user.globalName || interaction.user.username;
@@ -113,6 +115,7 @@ export async function execute(interaction: MessageContextMenuCommandInteraction)
             userId: sourceMessage.author.id,
             channelId: promotionChannel.id,
             messageId: posted.id,
+            noticeMessageId: notice.id,
             title: promotionTitle(sourceMessage.content, displayName),
         });
 
@@ -121,9 +124,13 @@ export async function execute(interaction: MessageContextMenuCommandInteraction)
         });
     } catch (error) {
         console.error("[promotion-submit] 메시지 전달 실패:", error);
-        const content = withPrivateNotice(
-            "메시지를 홍보 채널로 전달하지 못했습니다. 봇의 채널 보기·메시지 보내기 권한을 확인해 주세요."
-        );
+        const code = (error as { code?: number }).code;
+        const reason = code === 160014
+            ? "봇이 원본 메시지 내용을 읽을 수 없습니다. 원본 채널의 채널 보기·메시지 기록 보기 권한을 확인해 주세요."
+            : code === 50013
+                ? "봇 권한이 부족합니다. 원본 및 홍보 채널의 채널 보기·메시지 기록 보기·메시지 보내기 권한을 확인해 주세요."
+                : "메시지를 홍보 채널로 전달하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+        const content = withPrivateNotice(reason);
         if (interaction.deferred || interaction.replied) {
             return interaction.editReply({ content }).catch(() => undefined);
         }

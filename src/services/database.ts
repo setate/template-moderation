@@ -57,6 +57,7 @@ export interface PromotionPost {
     userId: string;
     channelId: string;
     messageId: string;
+    noticeMessageId?: string;
     title: string;
     createdAt: string;
 }

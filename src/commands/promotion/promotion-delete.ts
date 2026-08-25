@@ -39,6 +39,31 @@ function buildMenu(posts: PromotionPost[], disabled = false) {
     return new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu);
 }
 
+async function deletePromotionMessages(
+    interaction: ChatInputCommandInteraction,
+    post: PromotionPost
+): Promise<boolean> {
+    const channel = await interaction.client.channels.fetch(post.channelId);
+    if (!channel?.isTextBased() || channel.isDMBased()) return true;
+
+    let mainMessageMissing = false;
+    const messageIds = [post.messageId, post.noticeMessageId].filter((id): id is string => Boolean(id));
+    for (const [index, messageId] of messageIds.entries()) {
+        try {
+            const message = await channel.messages.fetch(messageId);
+            await message.delete();
+        } catch (error) {
+            const code = (error as { code?: number }).code;
+            if (code === 10003 || code === 10008) {
+                if (index === 0) mainMessageMissing = true;
+                continue;
+            }
+            throw error;
+        }
+    }
+    return mainMessageMissing;
+}
+
 async function syncRecentPromotionPosts(
     interaction: ChatInputCommandInteraction,
     hasAdminAccess: boolean
@@ -146,23 +171,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
                 });
             }
 
-            let alreadyGone = false;
-            try {
-                const channel = await interaction.client.channels.fetch(post.channelId);
-                if (!channel?.isTextBased() || channel.isDMBased()) {
-                    alreadyGone = true;
-                } else {
-                    const message = await channel.messages.fetch(post.messageId);
-                    await message.delete();
-                }
-            } catch (error) {
-                const code = (error as { code?: number }).code;
-                if (code === 10003 || code === 10008) {
-                    alreadyGone = true;
-                } else {
-                    throw error;
-                }
-            }
+            const alreadyGone = await deletePromotionMessages(interaction, post);
 
             await db.promotionPost.delete(post.id);
             return interaction.editReply({
