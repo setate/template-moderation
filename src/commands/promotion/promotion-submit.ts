@@ -144,18 +144,18 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             })
             .addFields({
                 name: "홍보자",
-                value: `<@${interaction.user.id}>\n사용자 ID: \`${interaction.user.id}\``,
+                value: `<@${interaction.user.id}>`,
                 inline: false,
             })
-            .setTimestamp()
-            .setFooter({ text: `홍보자: ${interaction.user.tag}` });
+            .setTimestamp();
 
         if (link) {
-            embed.addFields({ name: "바로가기", value: `[링크 열기](${link})`, inline: false });
+            embed.setURL(link);
         }
         if (image) embed.setImage(image.url);
 
         const posted = await channel.send({
+            content: link || undefined,
             embeds: [embed],
             allowedMentions: { parse: [] },
         });
