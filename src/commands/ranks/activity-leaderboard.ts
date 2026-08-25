@@ -1,7 +1,6 @@
 import {
     ChatInputCommandInteraction,
     escapeMarkdown,
-    GuildMember,
     SlashCommandBuilder,
 } from 'discord.js';
 import { db } from '../../services/database';
@@ -13,15 +12,6 @@ export const data = new SlashCommandBuilder()
     .setNameLocalizations({ ko: '활동순위' })
     .setDescription('Show the top 20 members by counted messages')
     .setDescriptionLocalizations({ ko: '집계된 메시지 수 기준 상위 20명을 보여줍니다' });
-
-function formatMemberName(member: GuildMember): string {
-    const displayName = escapeMarkdown(member.displayName);
-    const username = escapeMarkdown(member.user.username);
-
-    return member.displayName === member.user.username
-        ? `**${displayName}**`
-        : `**${displayName}** (@${username})`;
-}
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guild) {
@@ -53,7 +43,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const lines = top.map(({ activity, member }, index) => {
         const rank = medal[index] || `**${index + 1}.**`;
         const tenureDays = getTenureDays(member);
-        return `${rank} ${formatMemberName(member)} — **${activity.messageCount.toLocaleString()}개** · 체류 **${tenureDays.toLocaleString()}일**`;
+        const colorRole = member.roles.color;
+        const colorRoleTag = colorRole ? ` ${colorRole.toString()}` : '';
+        const displayName = escapeMarkdown(member.displayName);
+        return `${rank} **${displayName}**${colorRoleTag} — **${activity.messageCount.toLocaleString()}개** · 체류 **${tenureDays.toLocaleString()}일**`;
     });
 
     return interaction.editReply({
