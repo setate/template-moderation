@@ -336,9 +336,12 @@ export const promotionPost = {
         return promotionPosts.find(post => post.id === id) || null;
     },
 
-    findMany: async (where: { guildId: string; userId: string; limit?: number }) => {
+    findMany: async (where: { guildId: string; userId?: string; limit?: number }) => {
         return promotionPosts
-            .filter(post => post.guildId === where.guildId && post.userId === where.userId)
+            .filter(post =>
+                post.guildId === where.guildId
+                && (!where.userId || post.userId === where.userId)
+            )
             .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
             .slice(0, where.limit ?? 25);
     },

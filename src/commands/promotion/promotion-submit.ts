@@ -5,6 +5,7 @@ import {
 } from "discord.js";
 import { db } from "../../services/database";
 import { PRIVATE_RESPONSE_FLAGS, withPrivateNotice } from "../../utils/private-response";
+import { hasPromotionAdminAccess } from "../../utils/promotion-permissions";
 
 const pendingUsers = new Set<string>();
 
@@ -31,9 +32,10 @@ export async function execute(interaction: MessageContextMenuCommandInteraction)
     }
 
     const sourceMessage = interaction.targetMessage;
-    if (sourceMessage.author.id !== interaction.user.id) {
+    const hasAdminAccess = await hasPromotionAdminAccess(interaction);
+    if (sourceMessage.author.id !== interaction.user.id && !hasAdminAccess) {
         return interaction.reply({
-            content: withPrivateNotice("본인이 작성한 메시지만 홍보로 등록할 수 있습니다."),
+            content: withPrivateNotice("본인이 작성한 메시지만 홍보로 등록할 수 있습니다. 홍보 관리자는 다른 사용자의 메시지도 등록할 수 있습니다."),
             flags: PRIVATE_RESPONSE_FLAGS,
         });
     }
@@ -97,7 +99,7 @@ export async function execute(interaction: MessageContextMenuCommandInteraction)
 
         await db.promotionPost.create({
             guildId: interaction.guildId,
-            userId: interaction.user.id,
+            userId: sourceMessage.author.id,
             channelId: promotionChannel.id,
             messageId: posted.id,
             title: promotionTitle(sourceMessage.content, displayName),

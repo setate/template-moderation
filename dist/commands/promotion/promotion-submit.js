@@ -5,6 +5,7 @@ exports.execute = execute;
 const discord_js_1 = require("discord.js");
 const database_1 = require("../../services/database");
 const private_response_1 = require("../../utils/private-response");
+const promotion_permissions_1 = require("../../utils/promotion-permissions");
 const pendingUsers = new Set();
 function promotionTitle(content, displayName) {
     const firstLine = content
@@ -25,9 +26,10 @@ async function execute(interaction) {
         });
     }
     const sourceMessage = interaction.targetMessage;
-    if (sourceMessage.author.id !== interaction.user.id) {
+    const hasAdminAccess = await (0, promotion_permissions_1.hasPromotionAdminAccess)(interaction);
+    if (sourceMessage.author.id !== interaction.user.id && !hasAdminAccess) {
         return interaction.reply({
-            content: (0, private_response_1.withPrivateNotice)("본인이 작성한 메시지만 홍보로 등록할 수 있습니다."),
+            content: (0, private_response_1.withPrivateNotice)("본인이 작성한 메시지만 홍보로 등록할 수 있습니다. 홍보 관리자는 다른 사용자의 메시지도 등록할 수 있습니다."),
             flags: private_response_1.PRIVATE_RESPONSE_FLAGS,
         });
     }
@@ -82,7 +84,7 @@ async function execute(interaction) {
             : interaction.user.globalName || interaction.user.username;
         await database_1.db.promotionPost.create({
             guildId: interaction.guildId,
-            userId: interaction.user.id,
+            userId: sourceMessage.author.id,
             channelId: promotionChannel.id,
             messageId: posted.id,
             title: promotionTitle(sourceMessage.content, displayName),

@@ -8,6 +8,7 @@ import {
 } from "discord.js";
 import { db, PromotionPost } from "../../services/database";
 import { PRIVATE_RESPONSE_FLAGS, withPrivateNotice } from "../../utils/private-response";
+import { hasPromotionAdminAccess } from "../../utils/promotion-permissions";
 
 const MENU_TIMEOUT_MS = 5 * 60 * 1000;
 
@@ -38,7 +39,10 @@ function buildMenu(posts: PromotionPost[], disabled = false) {
     return new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu);
 }
 
-async function syncRecentPromotionPosts(interaction: ChatInputCommandInteraction): Promise<void> {
+async function syncRecentPromotionPosts(
+    interaction: ChatInputCommandInteraction,
+    hasAdminAccess: boolean
+): Promise<void> {
     if (!interaction.guildId || !interaction.client.user) return;
     const settings = await db.guild.findUnique({ where: { id: interaction.guildId } });
     if (!settings?.promotionChannelId) return;
@@ -53,13 +57,15 @@ async function syncRecentPromotionPosts(interaction: ChatInputCommandInteraction
             const promoterField = message.embeds
                 .flatMap(embed => embed.fields)
                 .find(field => field.name === "홍보자");
-            if (promoterField?.value.trim() !== `<@${interaction.user.id}>`) continue;
+            const promoterId = promoterField?.value.trim().match(/^<@!?(\d+)>$/)?.[1];
+            if (!promoterId) continue;
+            if (!hasAdminAccess && promoterId !== interaction.user.id) continue;
             if (await db.promotionPost.findByMessageId(message.id)) continue;
 
             const title = message.embeds.find(embed => embed.title)?.title || "제목 없는 홍보";
             await db.promotionPost.create({
                 guildId: interaction.guildId,
-                userId: interaction.user.id,
+                userId: promoterId,
                 channelId: channel.id,
                 messageId: message.id,
                 title,
@@ -75,7 +81,7 @@ export const data = new SlashCommandBuilder()
     .setName("promotion-delete")
     .setNameLocalizations({ ko: "홍보삭제" })
     .setDescription("Show and delete promotions you submitted")
-    .setDescriptionLocalizations({ ko: "내가 올린 홍보를 목록에서 선택해 삭제합니다" });
+    .setDescriptionLocalizations({ ko: "내 홍보를 삭제하며 홍보 관리자는 모든 홍보를 관리합니다" });
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guildId) {
@@ -86,11 +92,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
 
     await interaction.deferReply({ flags: PRIVATE_RESPONSE_FLAGS });
-    await syncRecentPromotionPosts(interaction);
+    const hasAdminAccess = await hasPromotionAdminAccess(interaction);
+    await syncRecentPromotionPosts(interaction, hasAdminAccess);
 
     const posts = await db.promotionPost.findMany({
         guildId: interaction.guildId,
-        userId: interaction.user.id,
+        userId: hasAdminAccess ? undefined : interaction.user.id,
         limit: 25,
     });
     if (!posts.length) {
@@ -101,10 +108,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     const embed = new EmbedBuilder()
         .setColor(0x5865f2)
-        .setTitle("내 홍보 목록")
+        .setTitle(hasAdminAccess ? "전체 홍보 관리" : "내 홍보 목록")
         .setDescription(
             posts.map((post, index) =>
-                `**${index + 1}. ${post.title}**\n${formatDate(post.createdAt)} · [게시물 보기](${messageUrl(post)})`
+                `**${index + 1}. ${post.title}**\n${hasAdminAccess ? `홍보자: <@${post.userId}> · ` : ""}${formatDate(post.createdAt)} · [게시물 보기](${messageUrl(post)})`
             ).join("\n\n").slice(0, 4000)
         );
 
@@ -127,7 +134,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             await selection.deferUpdate();
             const selectedId = Number(selection.values[0]);
             const post = await db.promotionPost.findUnique(selectedId);
-            if (!post || post.guildId !== interaction.guildId || post.userId !== interaction.user.id) {
+            if (
+                !post
+                || post.guildId !== interaction.guildId
+                || (!hasAdminAccess && post.userId !== interaction.user.id)
+            ) {
                 return interaction.editReply({
                     content: withPrivateNotice("선택한 홍보를 찾을 수 없거나 삭제 권한이 없습니다."),
                     embeds: [],
