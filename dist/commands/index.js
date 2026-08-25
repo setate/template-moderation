@@ -61,7 +61,7 @@ exports.commands = {
     "reaction-role-remove": reactionRoleRemove,
     "reaction-role-list": reactionRoleList,
     "reaction-role-panel": reactionRolePanel,
-    "field-roles": fieldRoles,
+    "role-setup": fieldRoles,
     purge,
     kick,
     ban,

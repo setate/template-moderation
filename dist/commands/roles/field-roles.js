@@ -48,8 +48,8 @@ function buildComponents(roles, member, disabled = false) {
     ];
 }
 exports.data = new discord_js_1.SlashCommandBuilder()
-    .setName("field-roles")
-    .setNameLocalizations({ ko: "분야역할" })
+    .setName("role-setup")
+    .setNameLocalizations({ ko: "역할설정" })
     .setDescription("Choose or remove your self-assignable field roles")
     .setDescriptionLocalizations({ ko: "내 분야 역할을 여러 개 지정하거나 삭제합니다" });
 async function execute(interaction) {
@@ -136,7 +136,7 @@ async function execute(interaction) {
     collector.on("end", async () => {
         const latestMember = await guild.members.fetch(interaction.user.id).catch(() => member);
         await interaction.editReply({
-            content: (0, private_response_1.withPrivateNotice)("분야 역할 선택 시간이 끝났습니다. 다시 변경하려면 `/분야역할`을 실행해 주세요."),
+            content: (0, private_response_1.withPrivateNotice)("분야 역할 선택 시간이 끝났습니다. 다시 변경하려면 `/역할설정`을 실행해 주세요."),
             components: buildComponents(manageableRoles, latestMember, true),
         }).catch(() => undefined);
     });
