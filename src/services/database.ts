@@ -17,8 +17,6 @@ export interface Guild {
     leaveMessage?: string;
     autoRoleId?: string;
     promotionChannelId?: string;
-    promotionCooldownHours?: number;
-    promotionLastSubmittedAt?: Record<string, string>;
     createdAt: string;
     updatedAt: string;
 }
@@ -165,23 +163,6 @@ export const guild = {
         }
         saveGuilds();
         return guilds.find(g => g.id === data.where.id);
-    },
-
-    recordPromotion: async (guildId: string, userId: string, submittedAt: Date = new Date()) => {
-        const existingIndex = guilds.findIndex(g => g.id === guildId);
-        if (existingIndex < 0) return null;
-
-        const current = guilds[existingIndex];
-        guilds[existingIndex] = {
-            ...current,
-            promotionLastSubmittedAt: {
-                ...(current.promotionLastSubmittedAt || {}),
-                [userId]: submittedAt.toISOString(),
-            },
-            updatedAt: submittedAt.toISOString(),
-        };
-        saveGuilds();
-        return guilds[existingIndex];
     },
 };
 

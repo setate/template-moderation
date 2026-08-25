@@ -93,8 +93,7 @@ async function execute(interaction) {
     const embed = new discord_js_1.EmbedBuilder()
         .setColor(0x5865f2)
         .setTitle("내 홍보 목록")
-        .setDescription(posts.map((post, index) => `**${index + 1}. ${post.title}**\n${formatDate(post.createdAt)} · [게시물 보기](${messageUrl(post)})`).join("\n\n").slice(0, 4000))
-        .setFooter({ text: "삭제해도 재홍보 대기시간은 초기화되지 않습니다." });
+        .setDescription(posts.map((post, index) => `**${index + 1}. ${post.title}**\n${formatDate(post.createdAt)} · [게시물 보기](${messageUrl(post)})`).join("\n\n").slice(0, 4000));
     await interaction.editReply({
         content: (0, private_response_1.withPrivateNotice)("아래에서 삭제할 홍보를 선택해 주세요."),
         embeds: [embed],
@@ -166,4 +165,3 @@ async function execute(interaction) {
         }).catch(() => undefined);
     });
 }
-

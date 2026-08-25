@@ -9,20 +9,6 @@ import { PRIVATE_RESPONSE_FLAGS, withPrivateNotice } from "../../utils/private-r
 
 const pendingUsers = new Set<string>();
 
-function remainingCooldown(lastSubmittedAt: string, cooldownHours: number): number {
-    const availableAt = new Date(lastSubmittedAt).getTime() + cooldownHours * 60 * 60 * 1000;
-    return Math.max(0, availableAt - Date.now());
-}
-
-function formatRemaining(milliseconds: number): string {
-    const minutes = Math.ceil(milliseconds / 60_000);
-    const hours = Math.floor(minutes / 60);
-    const remainder = minutes % 60;
-    if (hours === 0) return `${remainder}분`;
-    if (remainder === 0) return `${hours}시간`;
-    return `${hours}시간 ${remainder}분`;
-}
-
 function previewFieldValue(link: string, preview: Awaited<ReturnType<typeof getLinkPreview>>): string {
     const lines: string[] = [];
     if (preview?.title) lines.push(`**${preview.title.slice(0, 200)}**`);
@@ -137,18 +123,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         });
     }
 
-    const cooldownHours = settings.promotionCooldownHours ?? 24;
-    const lastSubmittedAt = settings.promotionLastSubmittedAt?.[interaction.user.id];
-    if (cooldownHours > 0 && lastSubmittedAt) {
-        const remaining = remainingCooldown(lastSubmittedAt, cooldownHours);
-        if (remaining > 0) {
-            return interaction.reply({
-                content: withPrivateNotice(`다음 홍보까지 **${formatRemaining(remaining)}** 남았습니다.`),
-                flags: PRIVATE_RESPONSE_FLAGS,
-            });
-        }
-    }
-
     const pendingKey = `${interaction.guildId}:${interaction.user.id}`;
     if (pendingUsers.has(pendingKey)) {
         return interaction.reply({
@@ -247,8 +221,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             messageId: posted.id,
             title,
         });
-        await db.guild.recordPromotion(interaction.guildId, interaction.user.id);
-
         return interaction.editReply({
             content: withPrivateNotice(
                 `홍보가 ${channel.toString()}에 게시되었습니다.${autoDetectedLink ? "\n제목 또는 내용의 주소를 자동으로 인식했습니다." : ""}\n${posted.url}`

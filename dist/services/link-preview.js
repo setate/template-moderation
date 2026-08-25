@@ -259,4 +259,3 @@ async function getLinkPreview(input) {
         siteName: siteName || finalUrl.hostname.replace(/^www\./, ""),
     };
 }
-

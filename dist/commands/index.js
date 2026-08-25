@@ -72,4 +72,3 @@ exports.commands = {
     "promotion-submit": promotionSubmit,
     "promotion-delete": promotionDelete,
 };
-

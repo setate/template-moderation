@@ -106,8 +106,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             posts.map((post, index) =>
                 `**${index + 1}. ${post.title}**\n${formatDate(post.createdAt)} · [게시물 보기](${messageUrl(post)})`
             ).join("\n\n").slice(0, 4000)
-        )
-        .setFooter({ text: "삭제해도 재홍보 대기시간은 초기화되지 않습니다." });
+        );
 
     await interaction.editReply({
         content: withPrivateNotice("아래에서 삭제할 홍보를 선택해 주세요."),

@@ -91,22 +91,6 @@ exports.guild = {
         saveGuilds();
         return guilds.find(g => g.id === data.where.id);
     },
-    recordPromotion: async (guildId, userId, submittedAt = new Date()) => {
-        const existingIndex = guilds.findIndex(g => g.id === guildId);
-        if (existingIndex < 0)
-            return null;
-        const current = guilds[existingIndex];
-        guilds[existingIndex] = {
-            ...current,
-            promotionLastSubmittedAt: {
-                ...(current.promotionLastSubmittedAt || {}),
-                [userId]: submittedAt.toISOString(),
-            },
-            updatedAt: submittedAt.toISOString(),
-        };
-        saveGuilds();
-        return guilds[existingIndex];
-    },
 };
 exports.reactionRole = {
     findUnique: async (where) => {
@@ -291,4 +275,3 @@ exports.db = {
     memberActivity: exports.memberActivity,
     promotionPost: exports.promotionPost,
 };
-
