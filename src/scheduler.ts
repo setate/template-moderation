@@ -1,5 +1,6 @@
 import { Client } from 'discord.js';
 import { db } from './services/database';
+import { fetchGuildMembers } from './services/guild-members';
 import { syncMemberRank } from './services/ranking';
 
 const SIX_HOURS = 6 * 60 * 60 * 1000;
@@ -8,7 +9,7 @@ async function syncAllGuildRanks(client: Client): Promise<void> {
     for (const discordGuild of client.guilds.cache.values()) {
         try {
             await discordGuild.roles.fetch();
-            const members = await discordGuild.members.fetch();
+            const members = await fetchGuildMembers(discordGuild);
             const activities = await db.memberActivity.findMany({ where: { guildId: discordGuild.id } });
             const counts = new Map(activities.map(activity => [activity.userId, activity.messageCount]));
 

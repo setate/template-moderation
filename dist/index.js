@@ -21,6 +21,20 @@ const client = new discord_js_1.Client({
     ],
     partials: [discord_js_1.Partials.Message, discord_js_1.Partials.Channel, discord_js_1.Partials.Reaction],
 });
+async function sendCommandError(interaction) {
+    const content = (0, private_response_1.withPrivateNotice)('명령어 실행 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+    try {
+        if (interaction.deferred || interaction.replied) {
+            await interaction.editReply({ content, embeds: [], components: [] });
+        }
+        else {
+            await interaction.reply({ content, flags: private_response_1.PRIVATE_RESPONSE_FLAGS });
+        }
+    }
+    catch (error) {
+        console.error(`[command] ${interaction.commandName} 오류 응답 전송 실패:`, error);
+    }
+}
 client.once(discord_js_1.Events.ClientReady, async () => {
     console.log(`Discord bot is ready! 🤖`);
     console.log(`Logged in as ${client.user.tag}!`);
@@ -37,14 +51,13 @@ client.on(discord_js_1.Events.InteractionCreate, async (interaction) => {
         const command = commands_1.commands[interaction.commandName];
         if (!command)
             return;
-        await command.execute(interaction).catch(async (error) => {
+        try {
+            await command.execute(interaction);
+        }
+        catch (error) {
             console.error(`Error executing command ${interaction.commandName}:`, error);
-            const replyMethod = interaction.replied || interaction.deferred ? 'followUp' : 'reply';
-            await interaction[replyMethod]({
-                content: (0, private_response_1.withPrivateNotice)('명령어 실행 중 오류가 발생했습니다.'),
-                flags: private_response_1.PRIVATE_RESPONSE_FLAGS
-            });
-        });
+            await sendCommandError(interaction);
+        }
     }
     catch (error) {
         console.error('Error handling interaction:', error);

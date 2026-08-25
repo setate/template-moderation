@@ -1,4 +1,4 @@
-import { Client, Events, GatewayIntentBits, Partials } from "discord.js";
+import { ChatInputCommandInteraction, Client, Events, GatewayIntentBits, Partials } from "discord.js";
 import { config } from "./config";
 import { commands } from "./commands";
 import { deployCommands } from "./deploy-commands";
@@ -23,6 +23,20 @@ const client = new Client({
     ],
     partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 });
+
+async function sendCommandError(interaction: ChatInputCommandInteraction): Promise<void> {
+    const content = withPrivateNotice('명령어 실행 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+
+    try {
+        if (interaction.deferred || interaction.replied) {
+            await interaction.editReply({ content, embeds: [], components: [] });
+        } else {
+            await interaction.reply({ content, flags: PRIVATE_RESPONSE_FLAGS });
+        }
+    } catch (error) {
+        console.error(`[command] ${interaction.commandName} 오류 응답 전송 실패:`, error);
+    }
+}
 
 // 봇이 준비되었을 때의 이벤트 핸들러
 client.once(Events.ClientReady, async () => {
@@ -51,16 +65,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
         if (!command) return;
 
         // 옵션 처리를 포함한 명령어 실행
-        await command.execute(interaction).catch(async (error) => {
+        try {
+            await command.execute(interaction);
+        } catch (error) {
             console.error(`Error executing command ${interaction.commandName}:`, error);
-
-            // 이미 응답된 경우 followUp 사용
-            const replyMethod = interaction.replied || interaction.deferred ? 'followUp' : 'reply';
-            await interaction[replyMethod]({
-                content: withPrivateNotice('명령어 실행 중 오류가 발생했습니다.'),
-                flags: PRIVATE_RESPONSE_FLAGS
-            });
-        });
+            await sendCommandError(interaction);
+        }
 
     } catch (error) {
         console.error('Error handling interaction:', error);

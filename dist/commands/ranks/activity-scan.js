@@ -4,6 +4,7 @@ exports.data = void 0;
 exports.execute = execute;
 const discord_js_1 = require("discord.js");
 const activity_1 = require("../../services/activity");
+const guild_members_1 = require("../../services/guild-members");
 const ranking_1 = require("../../services/ranking");
 const private_response_1 = require("../../utils/private-response");
 exports.data = new discord_js_1.SlashCommandBuilder()
@@ -76,7 +77,7 @@ async function execute(interaction) {
         const finalCounts = await (0, activity_1.finishHistoricalScan)(guild.id, counts);
         scanFinished = true;
         await guild.roles.fetch();
-        const members = await guild.members.fetch();
+        const members = await (0, guild_members_1.fetchGuildMembers)(guild);
         let changedMembers = 0;
         let failedRoleChanges = 0;
         for (const member of members.values()) {

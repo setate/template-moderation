@@ -14,6 +14,7 @@ import {
     finishHistoricalScan,
     isHistoricalScanActive,
 } from '../../services/activity';
+import { fetchGuildMembers } from '../../services/guild-members';
 import { syncMemberRank } from '../../services/ranking';
 import { PRIVATE_RESPONSE_FLAGS, withPrivateNotice } from '../../utils/private-response';
 
@@ -100,7 +101,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         const finalCounts = await finishHistoricalScan(guild.id, counts);
         scanFinished = true;
         await guild.roles.fetch();
-        const members = await guild.members.fetch();
+        const members = await fetchGuildMembers(guild);
         let changedMembers = 0;
         let failedRoleChanges = 0;
 

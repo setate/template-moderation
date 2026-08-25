@@ -3,6 +3,7 @@ import {
     SlashCommandBuilder,
 } from 'discord.js';
 import { db } from '../../services/database';
+import { fetchGuildMembers } from '../../services/guild-members';
 import { RANKS } from '../../services/ranking';
 import { PRIVATE_RESPONSE_FLAGS, withPrivateNotice } from '../../utils/private-response';
 
@@ -23,7 +24,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const active = activities.filter(activity => activity.messageCount > 0);
     const totalMessages = active.reduce((sum, activity) => sum + activity.messageCount, 0);
 
-    const members = await guild.members.fetch().catch(() => guild.members.cache);
+    const members = await fetchGuildMembers(guild).catch(() => guild.members.cache);
     const rankLines = RANKS.map(rank => {
         const role = guild.roles.cache.find(candidate => candidate.name === rank.name);
         const count = role

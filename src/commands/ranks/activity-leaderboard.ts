@@ -4,6 +4,7 @@ import {
     SlashCommandBuilder,
 } from 'discord.js';
 import { db } from '../../services/database';
+import { fetchGuildMembers } from '../../services/guild-members';
 import { getTenureDays } from '../../services/ranking';
 import { PRIVATE_RESPONSE_FLAGS, withPrivateNotice } from '../../utils/private-response';
 
@@ -21,7 +22,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     await interaction.deferReply({ flags: PRIVATE_RESPONSE_FLAGS });
     const guild = interaction.guild;
     const activities = await db.memberActivity.findMany({ where: { guildId: guild.id } });
-    const members = await guild.members.fetch();
+    const members = await fetchGuildMembers(guild);
     const top = activities
         .flatMap(activity => {
             const member = members.get(activity.userId);

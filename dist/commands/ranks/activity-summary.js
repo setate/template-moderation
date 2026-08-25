@@ -4,6 +4,7 @@ exports.data = void 0;
 exports.execute = execute;
 const discord_js_1 = require("discord.js");
 const database_1 = require("../../services/database");
+const guild_members_1 = require("../../services/guild-members");
 const ranking_1 = require("../../services/ranking");
 const private_response_1 = require("../../utils/private-response");
 exports.data = new discord_js_1.SlashCommandBuilder()
@@ -20,7 +21,7 @@ async function execute(interaction) {
     const activities = await database_1.db.memberActivity.findMany({ where: { guildId: guild.id } });
     const active = activities.filter(activity => activity.messageCount > 0);
     const totalMessages = active.reduce((sum, activity) => sum + activity.messageCount, 0);
-    const members = await guild.members.fetch().catch(() => guild.members.cache);
+    const members = await (0, guild_members_1.fetchGuildMembers)(guild).catch(() => guild.members.cache);
     const rankLines = ranking_1.RANKS.map(rank => {
         const role = guild.roles.cache.find(candidate => candidate.name === rank.name);
         const count = role
