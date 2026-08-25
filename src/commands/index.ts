@@ -9,6 +9,7 @@ import * as reactionRoleAdd from "./roles/reaction-role-add";
 import * as reactionRoleRemove from "./roles/reaction-role-remove";
 import * as reactionRoleList from "./roles/reaction-role-list";
 import * as reactionRolePanel from "./roles/reaction-role-panel";
+import * as fieldRoles from "./roles/field-roles";
 
 // Moderation commands
 import * as purge from "./moderation/purge";
@@ -35,6 +36,7 @@ export const commands = {
     "reaction-role-remove": reactionRoleRemove,
     "reaction-role-list": reactionRoleList,
     "reaction-role-panel": reactionRolePanel,
+    "field-roles": fieldRoles,
     purge,
     kick,
     ban,

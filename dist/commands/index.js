@@ -41,6 +41,7 @@ const reactionRoleAdd = __importStar(require("./roles/reaction-role-add"));
 const reactionRoleRemove = __importStar(require("./roles/reaction-role-remove"));
 const reactionRoleList = __importStar(require("./roles/reaction-role-list"));
 const reactionRolePanel = __importStar(require("./roles/reaction-role-panel"));
+const fieldRoles = __importStar(require("./roles/field-roles"));
 const purge = __importStar(require("./moderation/purge"));
 const kick = __importStar(require("./moderation/kick"));
 const ban = __importStar(require("./moderation/ban"));
@@ -60,6 +61,7 @@ exports.commands = {
     "reaction-role-remove": reactionRoleRemove,
     "reaction-role-list": reactionRoleList,
     "reaction-role-panel": reactionRolePanel,
+    "field-roles": fieldRoles,
     purge,
     kick,
     ban,
