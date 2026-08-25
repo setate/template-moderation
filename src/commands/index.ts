@@ -46,7 +46,7 @@ export const commands = {
     "activity-leaderboard": activityLeaderboard,
     "activity-summary": activitySummary,
     "promotion-setup": promotionSetup,
-    "promotion-submit": promotionSubmit,
+    "Promote Message": promotionSubmit,
     "promotion-delete": promotionDelete,
 };
 

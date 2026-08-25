@@ -46,13 +46,14 @@ client.once(discord_js_1.Events.ClientReady, async () => {
 });
 client.on(discord_js_1.Events.InteractionCreate, async (interaction) => {
     try {
-        if (!interaction.isChatInputCommand())
+        if (!interaction.isChatInputCommand() && !interaction.isMessageContextMenuCommand())
             return;
         const command = commands_1.commands[interaction.commandName];
         if (!command)
             return;
         try {
-            await command.execute(interaction);
+            const execute = command.execute;
+            await execute(interaction);
         }
         catch (error) {
             console.error(`Error executing command ${interaction.commandName}:`, error);

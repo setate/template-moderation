@@ -1,4 +1,11 @@
-import { ChatInputCommandInteraction, Client, Events, GatewayIntentBits, Partials } from "discord.js";
+import {
+    ChatInputCommandInteraction,
+    Client,
+    Events,
+    GatewayIntentBits,
+    MessageContextMenuCommandInteraction,
+    Partials,
+} from "discord.js";
 import { config } from "./config";
 import { commands } from "./commands";
 import { deployCommands } from "./deploy-commands";
@@ -24,7 +31,9 @@ const client = new Client({
     partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 });
 
-async function sendCommandError(interaction: ChatInputCommandInteraction): Promise<void> {
+type SupportedCommandInteraction = ChatInputCommandInteraction | MessageContextMenuCommandInteraction;
+
+async function sendCommandError(interaction: SupportedCommandInteraction): Promise<void> {
     const content = withPrivateNotice('명령어 실행 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
 
     try {
@@ -58,15 +67,16 @@ client.once(Events.ClientReady, async () => {
 // 인터랙션 핸들러
 client.on(Events.InteractionCreate, async (interaction) => {
     try {
-        // 슬래시 커맨드 체크
-        if (!interaction.isChatInputCommand()) return;
+        // 슬래시 명령어와 메시지 우클릭/길게 누르기 메뉴를 처리합니다.
+        if (!interaction.isChatInputCommand() && !interaction.isMessageContextMenuCommand()) return;
 
         const command = commands[interaction.commandName as keyof typeof commands];
         if (!command) return;
 
         // 옵션 처리를 포함한 명령어 실행
         try {
-            await command.execute(interaction);
+            const execute = command.execute as (commandInteraction: SupportedCommandInteraction) => Promise<unknown>;
+            await execute(interaction);
         } catch (error) {
             console.error(`Error executing command ${interaction.commandName}:`, error);
             await sendCommandError(interaction);
