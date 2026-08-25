@@ -92,7 +92,18 @@ export async function execute(interaction: MessageContextMenuCommandInteraction)
             });
         }
 
-        const posted = await sourceMessage.forward(promotionChannel);
+        const registrationNotice = sourceMessage.author.id === interaction.user.id
+            ? `📢 <@${interaction.user.id}>님이 홍보로 등록했습니다.`
+            : `📢 관리자 <@${interaction.user.id}>님이 <@${sourceMessage.author.id}>님의 메시지를 홍보로 등록했습니다.`;
+        const posted = await promotionChannel.send({
+            content: registrationNotice,
+            forward: {
+                message: sourceMessage.id,
+                channel: sourceMessage.channelId,
+                guild: interaction.guildId,
+            },
+            allowedMentions: { parse: [] },
+        });
         const displayName = interaction.member && "displayName" in interaction.member
             ? interaction.member.displayName
             : interaction.user.globalName || interaction.user.username;
