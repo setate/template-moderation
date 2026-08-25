@@ -4,6 +4,7 @@ import {
     SlashCommandBuilder,
 } from "discord.js";
 import { db } from "../../services/database";
+import { getLinkPreview } from "../../services/link-preview";
 import { PRIVATE_RESPONSE_FLAGS, withPrivateNotice } from "../../utils/private-response";
 
 const pendingUsers = new Set<string>();
@@ -20,6 +21,15 @@ function formatRemaining(milliseconds: number): string {
     if (hours === 0) return `${remainder}분`;
     if (remainder === 0) return `${hours}시간`;
     return `${hours}시간 ${remainder}분`;
+}
+
+function previewFieldValue(link: string, preview: Awaited<ReturnType<typeof getLinkPreview>>): string {
+    const lines: string[] = [];
+    if (preview?.title) lines.push(`**${preview.title.slice(0, 200)}**`);
+    if (preview?.siteName) lines.push(preview.siteName.slice(0, 100));
+    if (preview?.description) lines.push(preview.description.slice(0, 500));
+    lines.push(`🔗 ${link}`);
+    return lines.join("\n").slice(0, 1024);
 }
 
 export const data = new SlashCommandBuilder()
@@ -134,6 +144,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         const title = interaction.options.getString("title", true);
         const content = interaction.options.getString("content", true);
         const displayName = interaction.user.globalName || interaction.user.username;
+        let linkPreview: Awaited<ReturnType<typeof getLinkPreview>> = null;
+        if (link) {
+            try {
+                linkPreview = await getLinkPreview(link);
+            } catch (error) {
+                console.warn(`[promotion] 링크 미리보기 생성 실패 (${link}):`, error);
+            }
+        }
+
         const embed = new EmbedBuilder()
             .setColor(0x5865f2)
             .setTitle(title)
@@ -150,12 +169,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             .setTimestamp();
 
         if (link) {
-            embed.setURL(link);
+            embed.addFields({
+                name: "링크 미리보기",
+                value: previewFieldValue(link, linkPreview),
+                inline: false,
+            });
         }
-        if (image) embed.setImage(image.url);
+        if (image) {
+            embed.setImage(image.url);
+            if (linkPreview?.imageUrl) embed.setThumbnail(linkPreview.imageUrl);
+        } else if (linkPreview?.imageUrl) {
+            embed.setImage(linkPreview.imageUrl);
+        }
 
         const posted = await channel.send({
-            content: link || undefined,
             embeds: [embed],
             allowedMentions: { parse: [] },
         });

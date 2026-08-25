@@ -4,6 +4,7 @@ exports.data = void 0;
 exports.execute = execute;
 const discord_js_1 = require("discord.js");
 const database_1 = require("../../services/database");
+const link_preview_1 = require("../../services/link-preview");
 const private_response_1 = require("../../utils/private-response");
 const pendingUsers = new Set();
 function remainingCooldown(lastSubmittedAt, cooldownHours) {
@@ -19,6 +20,17 @@ function formatRemaining(milliseconds) {
     if (remainder === 0)
         return `${hours}시간`;
     return `${hours}시간 ${remainder}분`;
+}
+function previewFieldValue(link, preview) {
+    const lines = [];
+    if (preview?.title)
+        lines.push(`**${preview.title.slice(0, 200)}**`);
+    if (preview?.siteName)
+        lines.push(preview.siteName.slice(0, 100));
+    if (preview?.description)
+        lines.push(preview.description.slice(0, 500));
+    lines.push(`🔗 ${link}`);
+    return lines.join("\n").slice(0, 1024);
 }
 exports.data = new discord_js_1.SlashCommandBuilder()
     .setName("promotion-submit")
@@ -117,6 +129,15 @@ async function execute(interaction) {
         const title = interaction.options.getString("title", true);
         const content = interaction.options.getString("content", true);
         const displayName = interaction.user.globalName || interaction.user.username;
+        let linkPreview = null;
+        if (link) {
+            try {
+                linkPreview = await (0, link_preview_1.getLinkPreview)(link);
+            }
+            catch (error) {
+                console.warn(`[promotion] 링크 미리보기 생성 실패 (${link}):`, error);
+            }
+        }
         const embed = new discord_js_1.EmbedBuilder()
             .setColor(0x5865f2)
             .setTitle(title)
@@ -132,12 +153,21 @@ async function execute(interaction) {
         })
             .setTimestamp();
         if (link) {
-            embed.setURL(link);
+            embed.addFields({
+                name: "링크 미리보기",
+                value: previewFieldValue(link, linkPreview),
+                inline: false,
+            });
         }
-        if (image)
+        if (image) {
             embed.setImage(image.url);
+            if (linkPreview?.imageUrl)
+                embed.setThumbnail(linkPreview.imageUrl);
+        }
+        else if (linkPreview?.imageUrl) {
+            embed.setImage(linkPreview.imageUrl);
+        }
         const posted = await channel.send({
-            content: link || undefined,
             embeds: [embed],
             allowedMentions: { parse: [] },
         });
