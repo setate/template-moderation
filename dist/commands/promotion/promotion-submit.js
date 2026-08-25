@@ -154,8 +154,8 @@ async function execute(interaction) {
             .setTimestamp();
         if (link) {
             embed.addFields({
-                name: "링크 미리보기",
-                value: previewFieldValue(link, linkPreview),
+                name: "\u200b",
+                value: `\u200b\n${previewFieldValue(link, linkPreview)}`,
                 inline: false,
             });
         }
