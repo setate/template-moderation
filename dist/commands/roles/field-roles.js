@@ -15,10 +15,14 @@ const FIELD_ROLE_NAMES = [
     "기타",
 ];
 const SELECT_ID = "field-roles-select";
+const APPLY_ID = "field-roles-apply";
 const CLEAR_ID = "field-roles-clear";
 const MENU_TIMEOUT_MS = 5 * 60 * 1000;
 const pendingUpdates = new Set();
-function buildSelectMenu(roles, member, disabled = false) {
+function getSelectedRoleIds(roles, member) {
+    return new Set(roles.filter(role => member.roles.cache.has(role.id)).map(role => role.id));
+}
+function buildSelectMenu(roles, selectedRoleIds, disabled = false) {
     const menu = new discord_js_1.StringSelectMenuBuilder()
         .setCustomId(SELECT_ID)
         .setPlaceholder("지정할 분야 역할을 모두 선택하세요")
@@ -28,24 +32,34 @@ function buildSelectMenu(roles, member, disabled = false) {
         .addOptions(roles.map(role => ({
         label: role.name,
         value: role.id,
-        default: member.roles.cache.has(role.id),
+        default: selectedRoleIds.has(role.id),
     })));
     return new discord_js_1.ActionRowBuilder().addComponents(menu);
 }
-function buildClearButton(roles, member, disabled = false) {
-    const hasFieldRole = roles.some(role => member.roles.cache.has(role.id));
-    const button = new discord_js_1.ButtonBuilder()
+function buildActionButtons(selectedRoleIds, disabled = false) {
+    const applyButton = new discord_js_1.ButtonBuilder()
+        .setCustomId(APPLY_ID)
+        .setLabel("적용")
+        .setStyle(discord_js_1.ButtonStyle.Success)
+        .setDisabled(disabled);
+    const clearButton = new discord_js_1.ButtonBuilder()
         .setCustomId(CLEAR_ID)
-        .setLabel("분야 역할 모두 삭제")
-        .setStyle(discord_js_1.ButtonStyle.Danger)
-        .setDisabled(disabled || !hasFieldRole);
-    return new discord_js_1.ActionRowBuilder().addComponents(button);
+        .setLabel("선택 모두 해제")
+        .setStyle(discord_js_1.ButtonStyle.Secondary)
+        .setDisabled(disabled || selectedRoleIds.size === 0);
+    return new discord_js_1.ActionRowBuilder().addComponents(applyButton, clearButton);
 }
-function buildComponents(roles, member, disabled = false) {
+function buildComponents(roles, selectedRoleIds, disabled = false) {
     return [
-        buildSelectMenu(roles, member, disabled),
-        buildClearButton(roles, member, disabled),
+        buildSelectMenu(roles, selectedRoleIds, disabled),
+        buildActionButtons(selectedRoleIds, disabled),
     ];
+}
+function formatSelectedRoles(roles, selectedRoleIds) {
+    const names = roles
+        .filter(role => selectedRoleIds.has(role.id))
+        .map(role => role.name);
+    return names.length > 0 ? names.join(", ") : "없음";
 }
 exports.data = new discord_js_1.SlashCommandBuilder()
     .setName("role-setup")
@@ -79,32 +93,48 @@ async function execute(interaction) {
     const unavailableText = unavailableRoleNames.length > 0
         ? `\n현재 변경 불가: ${unavailableRoleNames.join(", ")}`
         : "";
+    let selectedRoleIds = getSelectedRoleIds(manageableRoles, member);
     const message = await interaction.editReply({
-        content: (0, private_response_1.withPrivateNotice)(`아래에서 원하는 분야 역할을 모두 선택하세요. 선택을 해제하면 해당 역할이 삭제됩니다.${unavailableText}`),
-        components: buildComponents(manageableRoles, member),
+        content: (0, private_response_1.withPrivateNotice)(`원하는 분야 역할을 선택한 뒤 **적용** 버튼을 눌러 주세요.\n선택된 역할: ${formatSelectedRoles(manageableRoles, selectedRoleIds)}${unavailableText}`),
+        components: buildComponents(manageableRoles, selectedRoleIds),
     });
     const collector = message.createMessageComponentCollector({
         filter: component => component.user.id === interaction.user.id
-            && (component.customId === SELECT_ID || component.customId === CLEAR_ID),
+            && (component.customId === SELECT_ID
+                || component.customId === APPLY_ID
+                || component.customId === CLEAR_ID),
         time: MENU_TIMEOUT_MS,
     });
     collector.on("collect", async (component) => {
         await component.deferUpdate();
+        if (component.isStringSelectMenu()) {
+            const allowedRoleIds = new Set(manageableRoles.map(role => role.id));
+            selectedRoleIds = new Set(component.values.filter(roleId => allowedRoleIds.has(roleId)));
+            await interaction.editReply({
+                content: (0, private_response_1.withPrivateNotice)(`선택을 저장했습니다. **적용** 버튼을 눌러야 실제 역할이 변경됩니다.\n선택된 역할: ${formatSelectedRoles(manageableRoles, selectedRoleIds)}${unavailableText}`),
+                components: buildComponents(manageableRoles, selectedRoleIds),
+            });
+            return;
+        }
+        if (component.customId === CLEAR_ID) {
+            selectedRoleIds = new Set();
+            await interaction.editReply({
+                content: (0, private_response_1.withPrivateNotice)(`모든 선택을 해제했습니다. 실제 역할을 삭제하려면 **적용** 버튼을 눌러 주세요.${unavailableText}`),
+                components: buildComponents(manageableRoles, selectedRoleIds),
+            });
+            return;
+        }
         const updateKey = `${guild.id}:${interaction.user.id}`;
         if (pendingUpdates.has(updateKey)) {
             await interaction.editReply({
-                content: (0, private_response_1.withPrivateNotice)("이전 역할 변경을 처리 중입니다. 잠시 후 다시 선택해 주세요."),
-                components: buildComponents(manageableRoles, member),
+                content: (0, private_response_1.withPrivateNotice)("이전 역할 변경을 처리 중입니다. 잠시 후 다시 적용해 주세요."),
+                components: buildComponents(manageableRoles, selectedRoleIds),
             });
             return;
         }
         pendingUpdates.add(updateKey);
         try {
             let updatedMember = await guild.members.fetch(interaction.user.id);
-            const allowedRoleIds = new Set(manageableRoles.map(role => role.id));
-            const selectedRoleIds = component.isStringSelectMenu()
-                ? new Set(component.values.filter(roleId => allowedRoleIds.has(roleId)))
-                : new Set();
             const rolesToAdd = manageableRoles.filter(role => selectedRoleIds.has(role.id) && !updatedMember.roles.cache.has(role.id));
             const rolesToRemove = manageableRoles.filter(role => !selectedRoleIds.has(role.id) && updatedMember.roles.cache.has(role.id));
             if (rolesToAdd.length > 0) {
@@ -113,20 +143,23 @@ async function execute(interaction) {
             if (rolesToRemove.length > 0) {
                 updatedMember = await updatedMember.roles.remove(rolesToRemove, "사용자 분야 역할 직접 삭제");
             }
+            selectedRoleIds = getSelectedRoleIds(manageableRoles, updatedMember);
             const changeLines = [
                 rolesToAdd.length > 0 ? `지정: ${rolesToAdd.map(role => role.name).join(", ")}` : "",
                 rolesToRemove.length > 0 ? `삭제: ${rolesToRemove.map(role => role.name).join(", ")}` : "",
             ].filter(Boolean);
             await interaction.editReply({
-                content: (0, private_response_1.withPrivateNotice)(changeLines.length > 0 ? changeLines.join("\n") : "변경된 분야 역할이 없습니다."),
-                components: buildComponents(manageableRoles, updatedMember),
+                content: (0, private_response_1.withPrivateNotice)(changeLines.length > 0
+                    ? `역할 설정을 적용했습니다.\n${changeLines.join("\n")}`
+                    : "이미 선택한 역할 설정이 적용되어 있습니다."),
+                components: buildComponents(manageableRoles, selectedRoleIds),
             });
         }
         catch (error) {
             console.error("[field-roles] 역할 변경 실패:", error);
             await interaction.editReply({
                 content: (0, private_response_1.withPrivateNotice)("역할을 변경하지 못했습니다. 봇 역할이 분야 역할보다 위에 있는지 확인해 주세요."),
-                components: buildComponents(manageableRoles, member),
+                components: buildComponents(manageableRoles, selectedRoleIds),
             });
         }
         finally {
@@ -135,9 +168,10 @@ async function execute(interaction) {
     });
     collector.on("end", async () => {
         const latestMember = await guild.members.fetch(interaction.user.id).catch(() => member);
+        const appliedRoleIds = getSelectedRoleIds(manageableRoles, latestMember);
         await interaction.editReply({
             content: (0, private_response_1.withPrivateNotice)("분야 역할 선택 시간이 끝났습니다. 다시 변경하려면 `/역할설정`을 실행해 주세요."),
-            components: buildComponents(manageableRoles, latestMember, true),
+            components: buildComponents(manageableRoles, appliedRoleIds, true),
         }).catch(() => undefined);
     });
 }
