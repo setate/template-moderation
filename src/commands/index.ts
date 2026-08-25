@@ -26,6 +26,7 @@ import * as activitySummary from "./ranks/activity-summary";
 // Promotion commands
 import * as promotionSetup from "./promotion/promotion-setup";
 import * as promotionSubmit from "./promotion/promotion-submit";
+import * as promotionCard from "./promotion/promotion-card";
 import * as promotionDelete from "./promotion/promotion-delete";
 
 export const commands = {
@@ -47,6 +48,7 @@ export const commands = {
     "activity-summary": activitySummary,
     "promotion-setup": promotionSetup,
     "Promote Message": promotionSubmit,
+    "promotion-submit": promotionCard,
     "promotion-delete": promotionDelete,
 };
 

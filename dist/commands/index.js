@@ -52,6 +52,7 @@ const activityLeaderboard = __importStar(require("./ranks/activity-leaderboard")
 const activitySummary = __importStar(require("./ranks/activity-summary"));
 const promotionSetup = __importStar(require("./promotion/promotion-setup"));
 const promotionSubmit = __importStar(require("./promotion/promotion-submit"));
+const promotionCard = __importStar(require("./promotion/promotion-card"));
 const promotionDelete = __importStar(require("./promotion/promotion-delete"));
 exports.commands = {
     ping,
@@ -72,5 +73,6 @@ exports.commands = {
     "activity-summary": activitySummary,
     "promotion-setup": promotionSetup,
     "Promote Message": promotionSubmit,
+    "promotion-submit": promotionCard,
     "promotion-delete": promotionDelete,
 };
