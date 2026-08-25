@@ -32,6 +32,54 @@ function previewFieldValue(link: string, preview: Awaited<ReturnType<typeof getL
     return lines.join("\n").slice(0, 1024);
 }
 
+interface DetectedLink {
+    original: string;
+    url: string;
+}
+
+function normalizeLink(value: string): string | undefined {
+    let candidate = value.trim();
+    while (/[.,!?;:'"\])}]$/.test(candidate)) candidate = candidate.slice(0, -1);
+    if (!/^https?:\/\//i.test(candidate)) candidate = `https://${candidate}`;
+
+    try {
+        const parsed = new URL(candidate);
+        if ((parsed.protocol === "http:" || parsed.protocol === "https:") && parsed.hostname.includes(".")) {
+            return parsed.toString();
+        }
+    } catch {
+        // 올바른 웹 주소가 아닙니다.
+    }
+    return undefined;
+}
+
+function findFirstUrl(...values: string[]): DetectedLink | undefined {
+    for (const value of values) {
+        const match = value.match(
+            /(?:https?:\/\/[^\s<>]+|(?:www\.)?(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}(?::\d{2,5})?(?:\/[^\s<>]*)?)/i
+        );
+        if (!match) continue;
+
+        let original = match[0];
+        while (/[.,!?;:'"\])}]$/.test(original)) original = original.slice(0, -1);
+        const url = normalizeLink(original);
+        if (url) return { original, url };
+    }
+    return undefined;
+}
+
+function removeLinkFromText(value: string, link: string | undefined, multiline = false): string {
+    if (!link) return value.trim();
+    const cleaned = value
+        .replace(`<${link}>`, "")
+        .replace(link, "")
+        .replace(/[ \t]+\n/g, "\n")
+        .replace(/\n[ \t]+/g, "\n")
+        .replace(multiline ? /\n{3,}/g : /\s{2,}/g, multiline ? "\n\n" : " ")
+        .trim();
+    return multiline ? cleaned : cleaned.replace(/^[-–—|:]+|[-–—|:]+$/g, "").trim();
+}
+
 export const data = new SlashCommandBuilder()
     .setName("promotion-submit")
     .setNameLocalizations({ ko: "홍보신청" })
@@ -59,8 +107,8 @@ export const data = new SlashCommandBuilder()
         option
             .setName("link")
             .setNameLocalizations({ ko: "링크" })
-            .setDescription("Optional link beginning with http:// or https://")
-            .setDescriptionLocalizations({ ko: "선택 사항: http:// 또는 https://로 시작하는 링크" })
+            .setDescription("Optional link; domains in the title or content are detected automatically")
+            .setDescriptionLocalizations({ ko: "선택 사항: discord.gg처럼 적어도 자동으로 인식합니다" })
             .setMaxLength(500)
             .setRequired(false)
     )
@@ -109,18 +157,19 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         });
     }
 
-    const link = interaction.options.getString("link")?.trim();
-    if (link) {
-        try {
-            const parsed = new URL(link);
-            if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error("invalid protocol");
-        } catch {
-            return interaction.reply({
-                content: withPrivateNotice("링크는 `http://` 또는 `https://`로 시작하는 올바른 주소여야 합니다."),
-                flags: PRIVATE_RESPONSE_FLAGS,
-            });
-        }
+    const submittedTitle = interaction.options.getString("title", true);
+    const submittedContent = interaction.options.getString("content", true);
+    const submittedLink = interaction.options.getString("link")?.trim();
+    const normalizedSubmittedLink = submittedLink ? normalizeLink(submittedLink) : undefined;
+    if (submittedLink && !normalizedSubmittedLink) {
+        return interaction.reply({
+            content: withPrivateNotice("올바른 웹 주소를 입력해 주세요. `https://`는 생략해도 됩니다."),
+            flags: PRIVATE_RESPONSE_FLAGS,
+        });
     }
+    const autoDetectedLink = submittedLink ? undefined : findFirstUrl(submittedTitle, submittedContent);
+    const link = normalizedSubmittedLink || autoDetectedLink?.url;
+    const linkTextInMessage = autoDetectedLink?.original;
 
     const image = interaction.options.getAttachment("image");
     if (image?.contentType && !image.contentType.startsWith("image/")) {
@@ -141,8 +190,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             });
         }
 
-        const title = interaction.options.getString("title", true);
-        const content = interaction.options.getString("content", true);
         const displayName = interaction.user.globalName || interaction.user.username;
         let linkPreview: Awaited<ReturnType<typeof getLinkPreview>> = null;
         if (link) {
@@ -152,6 +199,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
                 console.warn(`[promotion] 링크 미리보기 생성 실패 (${link}):`, error);
             }
         }
+
+        const title = removeLinkFromText(submittedTitle, linkTextInMessage)
+            || linkPreview?.title?.slice(0, 100)
+            || "홍보";
+        const content = removeLinkFromText(submittedContent, linkTextInMessage, true)
+            || linkPreview?.description?.slice(0, 2000)
+            || "아래 링크를 확인해 주세요.";
 
         const embed = new EmbedBuilder()
             .setColor(0x5865f2)
@@ -189,7 +243,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         await db.guild.recordPromotion(interaction.guildId, interaction.user.id);
 
         return interaction.editReply({
-            content: withPrivateNotice(`홍보가 ${channel.toString()}에 게시되었습니다.\n${posted.url}`),
+            content: withPrivateNotice(
+                `홍보가 ${channel.toString()}에 게시되었습니다.${autoDetectedLink ? "\n제목 또는 내용의 주소를 자동으로 인식했습니다." : ""}\n${posted.url}`
+            ),
         });
     } finally {
         pendingUsers.delete(pendingKey);

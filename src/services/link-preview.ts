@@ -208,10 +208,67 @@ async function getYoutubePreview(url: URL): Promise<LinkPreview | null> {
     };
 }
 
+function discordInviteCode(url: URL): string | undefined {
+    const hostname = url.hostname.toLowerCase();
+    if (hostname === "discord.gg") return url.pathname.split("/").filter(Boolean)[0];
+    if (hostname === "discord.com" || hostname.endsWith(".discord.com")) {
+        const match = url.pathname.match(/^\/invite\/([^/?]+)/i);
+        return match?.[1];
+    }
+    return undefined;
+}
+
+async function getDiscordInvitePreview(url: URL): Promise<LinkPreview | null> {
+    const inviteCode = discordInviteCode(url);
+    if (!inviteCode || !/^[\w-]{2,100}$/.test(inviteCode)) return null;
+
+    try {
+        const endpoint = `https://discord.com/api/v10/invites/${encodeURIComponent(inviteCode)}?with_counts=true&with_expiration=true`;
+        const response = await fetchWithTimeout(endpoint, {
+            headers: { accept: "application/json" },
+        });
+        if (!response.ok) return null;
+
+        const data = await response.json() as {
+            approximate_member_count?: number;
+            approximate_presence_count?: number;
+            guild?: {
+                id?: string;
+                name?: string;
+                description?: string | null;
+                icon?: string | null;
+            };
+        };
+        const guild = data.guild;
+        if (!guild?.name) return null;
+
+        const counts: string[] = [];
+        if (typeof data.approximate_presence_count === "number") {
+            counts.push(`온라인 ${data.approximate_presence_count.toLocaleString("ko-KR")}명`);
+        }
+        if (typeof data.approximate_member_count === "number") {
+            counts.push(`멤버 ${data.approximate_member_count.toLocaleString("ko-KR")}명`);
+        }
+
+        return {
+            title: guild.name,
+            siteName: "Discord 초대",
+            description: guild.description || counts.join(" · ") || undefined,
+            imageUrl: guild.id && guild.icon
+                ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=512`
+                : undefined,
+        };
+    } catch {
+        return null;
+    }
+}
+
 export async function getLinkPreview(input: string): Promise<LinkPreview | null> {
     const inputUrl = new URL(input);
     const youtubePreview = await getYoutubePreview(inputUrl);
     if (youtubePreview) return youtubePreview;
+    const discordPreview = await getDiscordInvitePreview(inputUrl);
+    if (discordPreview) return discordPreview;
 
     const { html, finalUrl } = await fetchPublicHtml(input);
     const title = findMeta(html, ["og:title", "twitter:title"])
