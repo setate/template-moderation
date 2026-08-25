@@ -15,7 +15,7 @@ import {
     isHistoricalScanActive,
 } from '../../services/activity';
 import { syncMemberRank } from '../../services/ranking';
-import { withPrivateNotice } from '../../utils/private-response';
+import { PRIVATE_RESPONSE_FLAGS, withPrivateNotice } from '../../utils/private-response';
 
 type ScannableChannel = TextChannel | NewsChannel | ThreadChannel;
 
@@ -28,15 +28,15 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guild) {
-        return interaction.reply({ content: withPrivateNotice('서버에서만 사용할 수 있습니다.'), ephemeral: true });
+        return interaction.reply({ content: withPrivateNotice('서버에서만 사용할 수 있습니다.'), flags: PRIVATE_RESPONSE_FLAGS });
     }
 
     const guild = interaction.guild;
     if (isHistoricalScanActive(guild.id)) {
-        return interaction.reply({ content: withPrivateNotice('이 서버의 활동 통계를 이미 수집 중입니다.'), ephemeral: true });
+        return interaction.reply({ content: withPrivateNotice('이 서버의 활동 통계를 이미 수집 중입니다.'), flags: PRIVATE_RESPONSE_FLAGS });
     }
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: PRIVATE_RESPONSE_FLAGS });
     beginHistoricalScan(guild.id);
     const scanBoundaryId = SnowflakeUtil.generate({ timestamp: Date.now() }).toString();
     const counts = new Map<string, number>();

@@ -38,7 +38,7 @@ async function execute(interaction) {
         return interaction.reply({
             content: private_response_1.PRIVATE_RESPONSE_NOTICE,
             embeds: [(0, embed_1.errorEmbed)((0, localization_1.t)("errors.guild_only"))],
-            ephemeral: true,
+            flags: private_response_1.PRIVATE_RESPONSE_FLAGS,
         });
     }
     const targetUser = interaction.options.getUser("user", true);
@@ -49,7 +49,7 @@ async function execute(interaction) {
         return interaction.reply({
             content: private_response_1.PRIVATE_RESPONSE_NOTICE,
             embeds: [(0, embed_1.errorEmbed)((0, localization_1.t)("commands.ban.error_self"))],
-            ephemeral: true,
+            flags: private_response_1.PRIVATE_RESPONSE_FLAGS,
         });
     }
     let targetMember = null;
@@ -63,7 +63,7 @@ async function execute(interaction) {
             return interaction.reply({
                 content: private_response_1.PRIVATE_RESPONSE_NOTICE,
                 embeds: [(0, embed_1.errorEmbed)((0, localization_1.t)("commands.ban.error_hierarchy"))],
-                ephemeral: true,
+                flags: private_response_1.PRIVATE_RESPONSE_FLAGS,
             });
         }
         const botMember = await interaction.guild.members.fetchMe();
@@ -71,7 +71,7 @@ async function execute(interaction) {
             return interaction.reply({
                 content: private_response_1.PRIVATE_RESPONSE_NOTICE,
                 embeds: [(0, embed_1.errorEmbed)((0, localization_1.t)("commands.ban.error_bot_hierarchy"))],
-                ephemeral: true,
+                flags: private_response_1.PRIVATE_RESPONSE_FLAGS,
             });
         }
     }
@@ -97,7 +97,7 @@ async function execute(interaction) {
         return interaction.reply({
             content: private_response_1.PRIVATE_RESPONSE_NOTICE,
             embeds: [(0, embed_1.successEmbed)((0, localization_1.t)("commands.ban.success", { user: targetUser.tag, reason }))],
-            ephemeral: true,
+            flags: private_response_1.PRIVATE_RESPONSE_FLAGS,
         });
     }
     catch (error) {
@@ -105,7 +105,7 @@ async function execute(interaction) {
         return interaction.reply({
             content: private_response_1.PRIVATE_RESPONSE_NOTICE,
             embeds: [(0, embed_1.errorEmbed)((0, localization_1.t)("errors.unknown_error"))],
-            ephemeral: true,
+            flags: private_response_1.PRIVATE_RESPONSE_FLAGS,
         });
     }
 }

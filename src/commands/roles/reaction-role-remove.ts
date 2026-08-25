@@ -6,7 +6,7 @@ import {
 import { db } from "../../services/database";
 import { t } from "../../services/localization";
 import { successEmbed, errorEmbed } from "../../utils/embed";
-import { PRIVATE_RESPONSE_NOTICE } from "../../utils/private-response";
+import { PRIVATE_RESPONSE_FLAGS, PRIVATE_RESPONSE_NOTICE } from "../../utils/private-response";
 
 export const data = new SlashCommandBuilder()
     .setName("reaction-role-remove")
@@ -36,7 +36,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         return interaction.reply({
             content: PRIVATE_RESPONSE_NOTICE,
             embeds: [errorEmbed(t("errors.guild_only"))],
-            ephemeral: true,
+            flags: PRIVATE_RESPONSE_FLAGS,
         });
     }
 
@@ -56,7 +56,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         return interaction.reply({
             content: PRIVATE_RESPONSE_NOTICE,
             embeds: [errorEmbed(t("commands.reaction-role-remove.error_not_found"))],
-            ephemeral: true,
+            flags: PRIVATE_RESPONSE_FLAGS,
         });
     }
 
@@ -69,6 +69,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return interaction.reply({
         content: PRIVATE_RESPONSE_NOTICE,
         embeds: [successEmbed(t("commands.reaction-role-remove.success"))],
-        ephemeral: true,
+        flags: PRIVATE_RESPONSE_FLAGS,
     });
 }

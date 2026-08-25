@@ -19,16 +19,16 @@ exports.data = new discord_js_1.SlashCommandBuilder()
     .setRequired(false));
 async function execute(interaction) {
     if (!interaction.guild) {
-        return interaction.reply({ content: (0, private_response_1.withPrivateNotice)('서버에서만 사용할 수 있습니다.'), ephemeral: true });
+        return interaction.reply({ content: (0, private_response_1.withPrivateNotice)('서버에서만 사용할 수 있습니다.'), flags: private_response_1.PRIVATE_RESPONSE_FLAGS });
     }
     const targetUser = interaction.options.getUser('user') || interaction.user;
     if (targetUser.id !== interaction.user.id &&
         !interaction.memberPermissions?.has(discord_js_1.PermissionFlagsBits.ManageGuild)) {
-        return interaction.reply({ content: (0, private_response_1.withPrivateNotice)('다른 사용자의 현황은 서버 관리 권한이 필요합니다.'), ephemeral: true });
+        return interaction.reply({ content: (0, private_response_1.withPrivateNotice)('다른 사용자의 현황은 서버 관리 권한이 필요합니다.'), flags: private_response_1.PRIVATE_RESPONSE_FLAGS });
     }
     const member = await interaction.guild.members.fetch(targetUser.id).catch(() => null);
     if (!member) {
-        return interaction.reply({ content: (0, private_response_1.withPrivateNotice)('서버 멤버를 찾을 수 없습니다.'), ephemeral: true });
+        return interaction.reply({ content: (0, private_response_1.withPrivateNotice)('서버 멤버를 찾을 수 없습니다.'), flags: private_response_1.PRIVATE_RESPONSE_FLAGS });
     }
     const activity = await database_1.db.memberActivity.findUnique({
         where: { guildId_userId: { guildId: interaction.guild.id, userId: targetUser.id } },
@@ -48,6 +48,6 @@ async function execute(interaction) {
             `메시지: **${messageCount.toLocaleString()}개**`,
             nextText,
         ].join('\n')),
-        ephemeral: true,
+        flags: private_response_1.PRIVATE_RESPONSE_FLAGS,
     });
 }

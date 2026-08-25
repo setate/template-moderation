@@ -28,7 +28,7 @@ async function execute(interaction) {
     if (!interaction.channel || !(interaction.channel instanceof discord_js_1.TextChannel)) {
         return interaction.reply({
             content: (0, private_response_1.withPrivateNotice)((0, localization_1.t)("errors.guild_only")),
-            ephemeral: true,
+            flags: private_response_1.PRIVATE_RESPONSE_FLAGS,
         });
     }
     const title = interaction.options.getString("title", true);
@@ -40,6 +40,6 @@ async function execute(interaction) {
     return interaction.reply({
         content: private_response_1.PRIVATE_RESPONSE_NOTICE,
         embeds: [(0, embed_1.successEmbed)((0, localization_1.t)("commands.reaction-role-panel.panel_created", { messageId: message.id }))],
-        ephemeral: true,
+        flags: private_response_1.PRIVATE_RESPONSE_FLAGS,
     });
 }

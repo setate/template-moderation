@@ -8,5 +8,5 @@ exports.data = new discord_js_1.SlashCommandBuilder()
     .setName('ping')
     .setDescription('ping');
 async function execute(interaction) {
-    return interaction.reply({ content: (0, private_response_1.withPrivateNotice)('pong! 🏓'), ephemeral: true });
+    return interaction.reply({ content: (0, private_response_1.withPrivateNotice)('pong! 🏓'), flags: private_response_1.PRIVATE_RESPONSE_FLAGS });
 }

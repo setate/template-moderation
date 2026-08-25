@@ -3,7 +3,7 @@ import {
     SlashCommandBuilder,
 } from 'discord.js';
 import { RANKS } from '../../services/ranking';
-import { withPrivateNotice } from '../../utils/private-response';
+import { PRIVATE_RESPONSE_FLAGS, withPrivateNotice } from '../../utils/private-response';
 
 export const data = new SlashCommandBuilder()
     .setName('rank-criteria')
@@ -25,6 +25,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             '## 🎓 자동 등급 기준',
             ...criteria,
         ].join('\n')),
-        ephemeral: true,
+        flags: PRIVATE_RESPONSE_FLAGS,
     });
 }

@@ -20,9 +20,9 @@ function formatMemberName(member) {
 }
 async function execute(interaction) {
     if (!interaction.guild) {
-        return interaction.reply({ content: (0, private_response_1.withPrivateNotice)('서버에서만 사용할 수 있습니다.'), ephemeral: true });
+        return interaction.reply({ content: (0, private_response_1.withPrivateNotice)('서버에서만 사용할 수 있습니다.'), flags: private_response_1.PRIVATE_RESPONSE_FLAGS });
     }
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: private_response_1.PRIVATE_RESPONSE_FLAGS });
     const guild = interaction.guild;
     const activities = await database_1.db.memberActivity.findMany({ where: { guildId: guild.id } });
     const members = await guild.members.fetch();

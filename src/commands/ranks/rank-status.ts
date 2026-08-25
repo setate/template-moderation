@@ -5,7 +5,7 @@ import {
 } from 'discord.js';
 import { db } from '../../services/database';
 import { getEligibleRank, getNextRank, getTenureDays } from '../../services/ranking';
-import { withPrivateNotice } from '../../utils/private-response';
+import { PRIVATE_RESPONSE_FLAGS, withPrivateNotice } from '../../utils/private-response';
 
 export const data = new SlashCommandBuilder()
     .setName('rank-status')
@@ -23,7 +23,7 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guild) {
-        return interaction.reply({ content: withPrivateNotice('서버에서만 사용할 수 있습니다.'), ephemeral: true });
+        return interaction.reply({ content: withPrivateNotice('서버에서만 사용할 수 있습니다.'), flags: PRIVATE_RESPONSE_FLAGS });
     }
 
     const targetUser = interaction.options.getUser('user') || interaction.user;
@@ -31,12 +31,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         targetUser.id !== interaction.user.id &&
         !interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)
     ) {
-        return interaction.reply({ content: withPrivateNotice('다른 사용자의 현황은 서버 관리 권한이 필요합니다.'), ephemeral: true });
+        return interaction.reply({ content: withPrivateNotice('다른 사용자의 현황은 서버 관리 권한이 필요합니다.'), flags: PRIVATE_RESPONSE_FLAGS });
     }
 
     const member = await interaction.guild.members.fetch(targetUser.id).catch(() => null);
     if (!member) {
-        return interaction.reply({ content: withPrivateNotice('서버 멤버를 찾을 수 없습니다.'), ephemeral: true });
+        return interaction.reply({ content: withPrivateNotice('서버 멤버를 찾을 수 없습니다.'), flags: PRIVATE_RESPONSE_FLAGS });
     }
 
     const activity = await db.memberActivity.findUnique({
@@ -58,6 +58,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             `메시지: **${messageCount.toLocaleString()}개**`,
             nextText,
         ].join('\n')),
-        ephemeral: true,
+        flags: PRIVATE_RESPONSE_FLAGS,
     });
 }

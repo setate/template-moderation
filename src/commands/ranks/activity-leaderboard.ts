@@ -6,7 +6,7 @@ import {
 } from 'discord.js';
 import { db } from '../../services/database';
 import { getTenureDays } from '../../services/ranking';
-import { withPrivateNotice } from '../../utils/private-response';
+import { PRIVATE_RESPONSE_FLAGS, withPrivateNotice } from '../../utils/private-response';
 
 export const data = new SlashCommandBuilder()
     .setName('activity-leaderboard')
@@ -25,10 +25,10 @@ function formatMemberName(member: GuildMember): string {
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guild) {
-        return interaction.reply({ content: withPrivateNotice('서버에서만 사용할 수 있습니다.'), ephemeral: true });
+        return interaction.reply({ content: withPrivateNotice('서버에서만 사용할 수 있습니다.'), flags: PRIVATE_RESPONSE_FLAGS });
     }
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: PRIVATE_RESPONSE_FLAGS });
     const guild = interaction.guild;
     const activities = await db.memberActivity.findMany({ where: { guildId: guild.id } });
     const members = await guild.members.fetch();

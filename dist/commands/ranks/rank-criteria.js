@@ -22,6 +22,6 @@ async function execute(interaction) {
             '## 🎓 자동 등급 기준',
             ...criteria,
         ].join('\n')),
-        ephemeral: true,
+        flags: private_response_1.PRIVATE_RESPONSE_FLAGS,
     });
 }

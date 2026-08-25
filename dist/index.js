@@ -42,7 +42,7 @@ client.on(discord_js_1.Events.InteractionCreate, async (interaction) => {
             const replyMethod = interaction.replied || interaction.deferred ? 'followUp' : 'reply';
             await interaction[replyMethod]({
                 content: (0, private_response_1.withPrivateNotice)('명령어 실행 중 오류가 발생했습니다.'),
-                ephemeral: true
+                flags: private_response_1.PRIVATE_RESPONSE_FLAGS
             });
         });
     }

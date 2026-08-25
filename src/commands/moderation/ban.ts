@@ -7,7 +7,7 @@ import {
 import { db } from "../../services/database";
 import { t } from "../../services/localization";
 import { successEmbed, errorEmbed } from "../../utils/embed";
-import { PRIVATE_RESPONSE_NOTICE } from "../../utils/private-response";
+import { PRIVATE_RESPONSE_FLAGS, PRIVATE_RESPONSE_NOTICE } from "../../utils/private-response";
 
 export const data = new SlashCommandBuilder()
     .setName("ban")
@@ -47,7 +47,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         return interaction.reply({
             content: PRIVATE_RESPONSE_NOTICE,
             embeds: [errorEmbed(t("errors.guild_only"))],
-            ephemeral: true,
+            flags: PRIVATE_RESPONSE_FLAGS,
         });
     }
 
@@ -62,7 +62,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         return interaction.reply({
             content: PRIVATE_RESPONSE_NOTICE,
             embeds: [errorEmbed(t("commands.ban.error_self"))],
-            ephemeral: true,
+            flags: PRIVATE_RESPONSE_FLAGS,
         });
     }
 
@@ -80,7 +80,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             return interaction.reply({
                 content: PRIVATE_RESPONSE_NOTICE,
                 embeds: [errorEmbed(t("commands.ban.error_hierarchy"))],
-                ephemeral: true,
+                flags: PRIVATE_RESPONSE_FLAGS,
             });
         }
 
@@ -89,7 +89,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             return interaction.reply({
                 content: PRIVATE_RESPONSE_NOTICE,
                 embeds: [errorEmbed(t("commands.ban.error_bot_hierarchy"))],
-                ephemeral: true,
+                flags: PRIVATE_RESPONSE_FLAGS,
             });
         }
     }
@@ -122,14 +122,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         return interaction.reply({
             content: PRIVATE_RESPONSE_NOTICE,
             embeds: [successEmbed(t("commands.ban.success", { user: targetUser.tag, reason }))],
-            ephemeral: true,
+            flags: PRIVATE_RESPONSE_FLAGS,
         });
     } catch (error) {
         console.error("Ban error:", error);
         return interaction.reply({
             content: PRIVATE_RESPONSE_NOTICE,
             embeds: [errorEmbed(t("errors.unknown_error"))],
-            ephemeral: true,
+            flags: PRIVATE_RESPONSE_FLAGS,
         });
     }
 }

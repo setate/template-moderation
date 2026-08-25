@@ -14,13 +14,13 @@ exports.data = new discord_js_1.SlashCommandBuilder()
     .setDefaultMemberPermissions(discord_js_1.PermissionFlagsBits.ManageGuild);
 async function execute(interaction) {
     if (!interaction.guild) {
-        return interaction.reply({ content: (0, private_response_1.withPrivateNotice)('서버에서만 사용할 수 있습니다.'), ephemeral: true });
+        return interaction.reply({ content: (0, private_response_1.withPrivateNotice)('서버에서만 사용할 수 있습니다.'), flags: private_response_1.PRIVATE_RESPONSE_FLAGS });
     }
     const guild = interaction.guild;
     if ((0, activity_1.isHistoricalScanActive)(guild.id)) {
-        return interaction.reply({ content: (0, private_response_1.withPrivateNotice)('이 서버의 활동 통계를 이미 수집 중입니다.'), ephemeral: true });
+        return interaction.reply({ content: (0, private_response_1.withPrivateNotice)('이 서버의 활동 통계를 이미 수집 중입니다.'), flags: private_response_1.PRIVATE_RESPONSE_FLAGS });
     }
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: private_response_1.PRIVATE_RESPONSE_FLAGS });
     (0, activity_1.beginHistoricalScan)(guild.id);
     const scanBoundaryId = discord_js_1.SnowflakeUtil.generate({ timestamp: Date.now() }).toString();
     const counts = new Map();

@@ -26,7 +26,7 @@ async function execute(interaction) {
         return interaction.reply({
             content: private_response_1.PRIVATE_RESPONSE_NOTICE,
             embeds: [(0, embed_1.errorEmbed)((0, localization_1.t)("errors.guild_only"))],
-            ephemeral: true,
+            flags: private_response_1.PRIVATE_RESPONSE_FLAGS,
         });
     }
     const amount = interaction.options.getInteger("amount", true);
@@ -34,7 +34,7 @@ async function execute(interaction) {
         return interaction.reply({
             content: private_response_1.PRIVATE_RESPONSE_NOTICE,
             embeds: [(0, embed_1.errorEmbed)((0, localization_1.t)("commands.purge.error_amount"))],
-            ephemeral: true,
+            flags: private_response_1.PRIVATE_RESPONSE_FLAGS,
         });
     }
     try {
@@ -56,7 +56,7 @@ async function execute(interaction) {
         return interaction.reply({
             content: private_response_1.PRIVATE_RESPONSE_NOTICE,
             embeds: [(0, embed_1.successEmbed)((0, localization_1.t)("commands.purge.success", { count: deleted.size.toString() }))],
-            ephemeral: true,
+            flags: private_response_1.PRIVATE_RESPONSE_FLAGS,
         });
     }
     catch (error) {
@@ -64,7 +64,7 @@ async function execute(interaction) {
         return interaction.reply({
             content: private_response_1.PRIVATE_RESPONSE_NOTICE,
             embeds: [(0, embed_1.errorEmbed)((0, localization_1.t)("commands.purge.error_old_messages"))],
-            ephemeral: true,
+            flags: private_response_1.PRIVATE_RESPONSE_FLAGS,
         });
     }
 }

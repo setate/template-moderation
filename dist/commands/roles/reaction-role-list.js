@@ -17,7 +17,7 @@ async function execute(interaction) {
     if (!interaction.guildId) {
         return interaction.reply({
             content: (0, private_response_1.withPrivateNotice)((0, localization_1.t)("errors.guild_only")),
-            ephemeral: true,
+            flags: private_response_1.PRIVATE_RESPONSE_FLAGS,
         });
     }
     const reactionRoles = await database_1.db.reactionRole.findMany({
@@ -37,5 +37,5 @@ async function execute(interaction) {
         embed.setDescription(description);
         embed.setFooter({ text: (0, localization_1.t)("commands.reaction-role-list.footer", { count: reactionRoles.length.toString() }) });
     }
-    return interaction.reply({ content: private_response_1.PRIVATE_RESPONSE_NOTICE, embeds: [embed], ephemeral: true });
+    return interaction.reply({ content: private_response_1.PRIVATE_RESPONSE_NOTICE, embeds: [embed], flags: private_response_1.PRIVATE_RESPONSE_FLAGS });
 }

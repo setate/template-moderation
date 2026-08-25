@@ -30,7 +30,7 @@ async function execute(interaction) {
         return interaction.reply({
             content: private_response_1.PRIVATE_RESPONSE_NOTICE,
             embeds: [(0, embed_1.errorEmbed)((0, localization_1.t)("errors.guild_only"))],
-            ephemeral: true,
+            flags: private_response_1.PRIVATE_RESPONSE_FLAGS,
         });
     }
     const messageId = interaction.options.getString("message_id", true);
@@ -47,7 +47,7 @@ async function execute(interaction) {
         return interaction.reply({
             content: private_response_1.PRIVATE_RESPONSE_NOTICE,
             embeds: [(0, embed_1.errorEmbed)((0, localization_1.t)("commands.reaction-role-remove.error_not_found"))],
-            ephemeral: true,
+            flags: private_response_1.PRIVATE_RESPONSE_FLAGS,
         });
     }
     await database_1.db.reactionRole.delete({
@@ -58,6 +58,6 @@ async function execute(interaction) {
     return interaction.reply({
         content: private_response_1.PRIVATE_RESPONSE_NOTICE,
         embeds: [(0, embed_1.successEmbed)((0, localization_1.t)("commands.reaction-role-remove.success"))],
-        ephemeral: true,
+        flags: private_response_1.PRIVATE_RESPONSE_FLAGS,
     });
 }
