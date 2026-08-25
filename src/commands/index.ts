@@ -22,6 +22,10 @@ import * as activityScan from "./ranks/activity-scan";
 import * as activityLeaderboard from "./ranks/activity-leaderboard";
 import * as activitySummary from "./ranks/activity-summary";
 
+// Promotion commands
+import * as promotionSetup from "./promotion/promotion-setup";
+import * as promotionSubmit from "./promotion/promotion-submit";
+
 export const commands = {
     ping,
     "welcome-setup": welcomeSetup,
@@ -38,4 +42,7 @@ export const commands = {
     "activity-scan": activityScan,
     "activity-leaderboard": activityLeaderboard,
     "activity-summary": activitySummary,
+    "promotion-setup": promotionSetup,
+    "promotion-submit": promotionSubmit,
 };
+

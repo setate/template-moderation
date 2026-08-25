@@ -49,6 +49,8 @@ const rankCriteria = __importStar(require("./ranks/rank-criteria"));
 const activityScan = __importStar(require("./ranks/activity-scan"));
 const activityLeaderboard = __importStar(require("./ranks/activity-leaderboard"));
 const activitySummary = __importStar(require("./ranks/activity-summary"));
+const promotionSetup = __importStar(require("./promotion/promotion-setup"));
+const promotionSubmit = __importStar(require("./promotion/promotion-submit"));
 exports.commands = {
     ping,
     "welcome-setup": welcomeSetup,
@@ -65,4 +67,7 @@ exports.commands = {
     "activity-scan": activityScan,
     "activity-leaderboard": activityLeaderboard,
     "activity-summary": activitySummary,
+    "promotion-setup": promotionSetup,
+    "promotion-submit": promotionSubmit,
 };
+
