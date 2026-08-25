@@ -25,6 +25,7 @@ import * as activitySummary from "./ranks/activity-summary";
 // Promotion commands
 import * as promotionSetup from "./promotion/promotion-setup";
 import * as promotionSubmit from "./promotion/promotion-submit";
+import * as promotionDelete from "./promotion/promotion-delete";
 
 export const commands = {
     ping,
@@ -44,5 +45,6 @@ export const commands = {
     "activity-summary": activitySummary,
     "promotion-setup": promotionSetup,
     "promotion-submit": promotionSubmit,
+    "promotion-delete": promotionDelete,
 };
 

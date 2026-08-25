@@ -240,6 +240,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             embeds: [embed],
             allowedMentions: { parse: [] },
         });
+        await db.promotionPost.create({
+            guildId: interaction.guildId,
+            userId: interaction.user.id,
+            channelId: channel.id,
+            messageId: posted.id,
+            title,
+        });
         await db.guild.recordPromotion(interaction.guildId, interaction.user.id);
 
         return interaction.editReply({

@@ -216,6 +216,13 @@ async function execute(interaction) {
             embeds: [embed],
             allowedMentions: { parse: [] },
         });
+        await database_1.db.promotionPost.create({
+            guildId: interaction.guildId,
+            userId: interaction.user.id,
+            channelId: channel.id,
+            messageId: posted.id,
+            title,
+        });
         await database_1.db.guild.recordPromotion(interaction.guildId, interaction.user.id);
         return interaction.editReply({
             content: (0, private_response_1.withPrivateNotice)(`홍보가 ${channel.toString()}에 게시되었습니다.${autoDetectedLink ? "\n제목 또는 내용의 주소를 자동으로 인식했습니다." : ""}\n${posted.url}`),

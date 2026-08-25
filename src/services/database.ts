@@ -6,6 +6,7 @@ const GUILDS_FILE = path.join(DATA_DIR, 'guilds.json');
 const REACTION_ROLES_FILE = path.join(DATA_DIR, 'reaction-roles.json');
 const MODERATION_LOGS_FILE = path.join(DATA_DIR, 'moderation-logs.json');
 const MEMBER_ACTIVITY_FILE = path.join(DATA_DIR, 'member-activity.json');
+const PROMOTION_POSTS_FILE = path.join(DATA_DIR, 'promotion-posts.json');
 
 // 타입 정의
 export interface Guild {
@@ -52,11 +53,22 @@ export interface MemberActivity {
     updatedAt: string;
 }
 
+export interface PromotionPost {
+    id: number;
+    guildId: string;
+    userId: string;
+    channelId: string;
+    messageId: string;
+    title: string;
+    createdAt: string;
+}
+
 // 데이터 저장소
 let guilds: Guild[] = [];
 let reactionRoles: ReactionRole[] = [];
 let moderationLogs: ModerationLog[] = [];
 let memberActivities: MemberActivity[] = [];
+let promotionPosts: PromotionPost[] = [];
 
 // 데이터 디렉토리 및 파일 초기화
 function ensureDataDirectory() {
@@ -79,6 +91,10 @@ function ensureDataDirectory() {
     if (!fs.existsSync(MEMBER_ACTIVITY_FILE)) {
         fs.writeFileSync(MEMBER_ACTIVITY_FILE, JSON.stringify([], null, 2));
     }
+
+    if (!fs.existsSync(PROMOTION_POSTS_FILE)) {
+        fs.writeFileSync(PROMOTION_POSTS_FILE, JSON.stringify([], null, 2));
+    }
 }
 
 // JSON 파일 읽기
@@ -88,6 +104,7 @@ function loadData() {
         reactionRoles = JSON.parse(fs.readFileSync(REACTION_ROLES_FILE, 'utf-8'));
         moderationLogs = JSON.parse(fs.readFileSync(MODERATION_LOGS_FILE, 'utf-8'));
         memberActivities = JSON.parse(fs.readFileSync(MEMBER_ACTIVITY_FILE, 'utf-8'));
+        promotionPosts = JSON.parse(fs.readFileSync(PROMOTION_POSTS_FILE, 'utf-8'));
     } catch (error) {
         console.error('Error loading data:', error);
     }
@@ -108,6 +125,10 @@ function saveModerationLogs() {
 
 function saveMemberActivities() {
     fs.writeFileSync(MEMBER_ACTIVITY_FILE, JSON.stringify(memberActivities, null, 2));
+}
+
+function savePromotionPosts() {
+    fs.writeFileSync(PROMOTION_POSTS_FILE, JSON.stringify(promotionPosts, null, 2));
 }
 
 // Guild 작업
@@ -328,6 +349,46 @@ export const memberActivity = {
     },
 };
 
+// PromotionPost 작업
+export const promotionPost = {
+    findUnique: async (id: number) => {
+        return promotionPosts.find(post => post.id === id) || null;
+    },
+
+    findMany: async (where: { guildId: string; userId: string; limit?: number }) => {
+        return promotionPosts
+            .filter(post => post.guildId === where.guildId && post.userId === where.userId)
+            .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+            .slice(0, where.limit ?? 25);
+    },
+
+    findByMessageId: async (messageId: string) => {
+        return promotionPosts.find(post => post.messageId === messageId) || null;
+    },
+
+    create: async (data: Omit<PromotionPost, 'id' | 'createdAt'> & { createdAt?: string }) => {
+        const newId = promotionPosts.length > 0
+            ? Math.max(...promotionPosts.map(post => post.id)) + 1
+            : 1;
+        const newPost: PromotionPost = {
+            ...data,
+            id: newId,
+            createdAt: data.createdAt || new Date().toISOString(),
+        };
+        promotionPosts.push(newPost);
+        savePromotionPosts();
+        return newPost;
+    },
+
+    delete: async (id: number) => {
+        const index = promotionPosts.findIndex(post => post.id === id);
+        if (index < 0) return null;
+        const [deleted] = promotionPosts.splice(index, 1);
+        savePromotionPosts();
+        return deleted;
+    },
+};
+
 // 초기화
 ensureDataDirectory();
 loadData();
@@ -342,5 +403,6 @@ export const db = {
     reactionRole,
     moderationLog,
     memberActivity,
+    promotionPost,
 };
 

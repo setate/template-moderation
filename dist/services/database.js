@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.db = exports.memberActivity = exports.moderationLog = exports.reactionRole = exports.guild = void 0;
+exports.db = exports.promotionPost = exports.memberActivity = exports.moderationLog = exports.reactionRole = exports.guild = void 0;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const DATA_DIR = path_1.default.join(process.cwd(), 'data');
@@ -11,10 +11,12 @@ const GUILDS_FILE = path_1.default.join(DATA_DIR, 'guilds.json');
 const REACTION_ROLES_FILE = path_1.default.join(DATA_DIR, 'reaction-roles.json');
 const MODERATION_LOGS_FILE = path_1.default.join(DATA_DIR, 'moderation-logs.json');
 const MEMBER_ACTIVITY_FILE = path_1.default.join(DATA_DIR, 'member-activity.json');
+const PROMOTION_POSTS_FILE = path_1.default.join(DATA_DIR, 'promotion-posts.json');
 let guilds = [];
 let reactionRoles = [];
 let moderationLogs = [];
 let memberActivities = [];
+let promotionPosts = [];
 function ensureDataDirectory() {
     if (!fs_1.default.existsSync(DATA_DIR)) {
         fs_1.default.mkdirSync(DATA_DIR, { recursive: true });
@@ -31,6 +33,9 @@ function ensureDataDirectory() {
     if (!fs_1.default.existsSync(MEMBER_ACTIVITY_FILE)) {
         fs_1.default.writeFileSync(MEMBER_ACTIVITY_FILE, JSON.stringify([], null, 2));
     }
+    if (!fs_1.default.existsSync(PROMOTION_POSTS_FILE)) {
+        fs_1.default.writeFileSync(PROMOTION_POSTS_FILE, JSON.stringify([], null, 2));
+    }
 }
 function loadData() {
     try {
@@ -38,6 +43,7 @@ function loadData() {
         reactionRoles = JSON.parse(fs_1.default.readFileSync(REACTION_ROLES_FILE, 'utf-8'));
         moderationLogs = JSON.parse(fs_1.default.readFileSync(MODERATION_LOGS_FILE, 'utf-8'));
         memberActivities = JSON.parse(fs_1.default.readFileSync(MEMBER_ACTIVITY_FILE, 'utf-8'));
+        promotionPosts = JSON.parse(fs_1.default.readFileSync(PROMOTION_POSTS_FILE, 'utf-8'));
     }
     catch (error) {
         console.error('Error loading data:', error);
@@ -54,6 +60,9 @@ function saveModerationLogs() {
 }
 function saveMemberActivities() {
     fs_1.default.writeFileSync(MEMBER_ACTIVITY_FILE, JSON.stringify(memberActivities, null, 2));
+}
+function savePromotionPosts() {
+    fs_1.default.writeFileSync(PROMOTION_POSTS_FILE, JSON.stringify(promotionPosts, null, 2));
 }
 exports.guild = {
     findUnique: async (where) => {
@@ -235,6 +244,41 @@ exports.memberActivity = {
         return memberActivities.filter(activity => activity.guildId === guildId);
     },
 };
+exports.promotionPost = {
+    findUnique: async (id) => {
+        return promotionPosts.find(post => post.id === id) || null;
+    },
+    findMany: async (where) => {
+        return promotionPosts
+            .filter(post => post.guildId === where.guildId && post.userId === where.userId)
+            .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+            .slice(0, where.limit ?? 25);
+    },
+    findByMessageId: async (messageId) => {
+        return promotionPosts.find(post => post.messageId === messageId) || null;
+    },
+    create: async (data) => {
+        const newId = promotionPosts.length > 0
+            ? Math.max(...promotionPosts.map(post => post.id)) + 1
+            : 1;
+        const newPost = {
+            ...data,
+            id: newId,
+            createdAt: data.createdAt || new Date().toISOString(),
+        };
+        promotionPosts.push(newPost);
+        savePromotionPosts();
+        return newPost;
+    },
+    delete: async (id) => {
+        const index = promotionPosts.findIndex(post => post.id === id);
+        if (index < 0)
+            return null;
+        const [deleted] = promotionPosts.splice(index, 1);
+        savePromotionPosts();
+        return deleted;
+    },
+};
 ensureDataDirectory();
 loadData();
 process.on('beforeExit', () => {
@@ -245,5 +289,6 @@ exports.db = {
     reactionRole: exports.reactionRole,
     moderationLog: exports.moderationLog,
     memberActivity: exports.memberActivity,
+    promotionPost: exports.promotionPost,
 };
 
