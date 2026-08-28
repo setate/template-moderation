@@ -13,6 +13,8 @@ export const RANKS: readonly RankDefinition[] = [
     { name: '박사', minDays: 90, minMessages: 1000 },
 ] as const;
 
+const memberRankSyncs = new Map<string, Promise<boolean>>();
+
 export function getTenureDays(member: GuildMember): number {
     if (!member.joinedTimestamp) return 0;
     return Math.max(0, Math.floor((Date.now() - member.joinedTimestamp) / 86_400_000));
@@ -30,9 +32,7 @@ export function getNextRank(days: number, messageCount: number): RankDefinition 
     return RANKS[index + 1] || null;
 }
 
-export async function syncMemberRank(member: GuildMember, messageCount: number): Promise<boolean> {
-    if (member.user.bot) return false;
-
+async function syncMemberRankNow(member: GuildMember, messageCount: number): Promise<boolean> {
     const eligibleRank = getEligibleRank(getTenureDays(member), messageCount);
     const rankRoles = RANKS
         .map(rank => member.guild.roles.cache.find(role => role.name === rank.name))
@@ -70,4 +70,26 @@ export async function syncMemberRank(member: GuildMember, messageCount: number):
         console.log(`[ranking] ${member.user.tag}: ${targetRank.name} (${messageCount} messages)`);
     }
     return changed;
+}
+
+export async function syncMemberRank(member: GuildMember, messageCount: number): Promise<boolean> {
+    if (member.user.bot) return false;
+
+    // 메시지 승급과 정기 점검이 겹치면 서로가 부여한 역할을 지울 수 있다.
+    // 같은 멤버의 역할 변경은 항상 하나씩 순서대로 실행한다.
+    const memberKey = `${member.guild.id}:${member.id}`;
+    const previousSync = memberRankSyncs.get(memberKey) || Promise.resolve(false);
+    const currentSync = previousSync
+        .catch(() => false)
+        .then(() => syncMemberRankNow(member, messageCount));
+
+    memberRankSyncs.set(memberKey, currentSync);
+
+    try {
+        return await currentSync;
+    } finally {
+        if (memberRankSyncs.get(memberKey) === currentSync) {
+            memberRankSyncs.delete(memberKey);
+        }
+    }
 }

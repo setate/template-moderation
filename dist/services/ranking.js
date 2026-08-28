@@ -11,6 +11,7 @@ exports.RANKS = [
     { name: '석사', minDays: 30, minMessages: 300 },
     { name: '박사', minDays: 90, minMessages: 1000 },
 ];
+const memberRankSyncs = new Map();
 function getTenureDays(member) {
     if (!member.joinedTimestamp)
         return 0;
@@ -26,9 +27,7 @@ function getNextRank(days, messageCount) {
     const index = exports.RANKS.findIndex(rank => rank.name === eligible.name);
     return exports.RANKS[index + 1] || null;
 }
-async function syncMemberRank(member, messageCount) {
-    if (member.user.bot)
-        return false;
+async function syncMemberRankNow(member, messageCount) {
     const eligibleRank = getEligibleRank(getTenureDays(member), messageCount);
     const rankRoles = exports.RANKS
         .map(rank => member.guild.roles.cache.find(role => role.name === rank.name))
@@ -60,4 +59,22 @@ async function syncMemberRank(member, messageCount) {
         console.log(`[ranking] ${member.user.tag}: ${targetRank.name} (${messageCount} messages)`);
     }
     return changed;
+}
+async function syncMemberRank(member, messageCount) {
+    if (member.user.bot)
+        return false;
+    const memberKey = `${member.guild.id}:${member.id}`;
+    const previousSync = memberRankSyncs.get(memberKey) || Promise.resolve(false);
+    const currentSync = previousSync
+        .catch(() => false)
+        .then(() => syncMemberRankNow(member, messageCount));
+    memberRankSyncs.set(memberKey, currentSync);
+    try {
+        return await currentSync;
+    }
+    finally {
+        if (memberRankSyncs.get(memberKey) === currentSync) {
+            memberRankSyncs.delete(memberKey);
+        }
+    }
 }
