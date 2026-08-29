@@ -5,6 +5,7 @@ const config_1 = require("./config");
 const commands_1 = require("./commands");
 const deploy_commands_1 = require("./deploy-commands");
 const scheduler_1 = require("./scheduler");
+const promotion_message_repair_1 = require("./services/promotion-message-repair");
 const private_response_1 = require("./utils/private-response");
 const messageCreate_1 = require("./events/messageCreate");
 const guildMemberAdd_1 = require("./events/guildMemberAdd");
@@ -41,6 +42,15 @@ client.once(discord_js_1.Events.ClientReady, async () => {
     client.user?.setActivity('Activity', { type: 3 });
     console.log("Started refreshing application (/) commands.");
     await (0, deploy_commands_1.deployCommands)();
+    try {
+        const repairedCount = await (0, promotion_message_repair_1.repairLegacyPromotionMessages)(client);
+        if (repairedCount > 0) {
+            console.log(`기존 홍보 메시지 ${repairedCount}개의 사용자 표시를 수정했습니다.`);
+        }
+    }
+    catch (error) {
+        console.warn("기존 홍보 메시지 수정 중 오류가 발생했습니다:", error);
+    }
     (0, scheduler_1.startScheduledJobs)(client);
     console.log("스케줄러가 시작되었습니다.");
 });

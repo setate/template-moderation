@@ -4,8 +4,10 @@ exports.data = void 0;
 exports.execute = execute;
 const discord_js_1 = require("discord.js");
 const database_1 = require("../../services/database");
+const guild_members_1 = require("../../services/guild-members");
 const private_response_1 = require("../../utils/private-response");
 const promotion_permissions_1 = require("../../utils/promotion-permissions");
+const promotion_display_1 = require("../../utils/promotion-display");
 const pendingUsers = new Set();
 function promotionTitle(content, displayName) {
     const firstLine = content
@@ -78,9 +80,17 @@ async function execute(interaction) {
                 content: (0, private_response_1.withPrivateNotice)("설정된 홍보 채널을 사용할 수 없습니다. 관리자에게 `/홍보설정`을 다시 요청해 주세요."),
             });
         }
-        const registrationNotice = sourceMessage.author.id === interaction.user.id
-            ? `📢 <@${interaction.user.id}>님이 홍보로 등록했습니다.`
-            : `📢 관리자 <@${interaction.user.id}>님이 <@${sourceMessage.author.id}>님의 메시지를 홍보로 등록했습니다.`;
+        const members = interaction.guild
+            ? await (0, guild_members_1.fetchGuildMembers)(interaction.guild).catch(() => interaction.guild.members.cache)
+            : undefined;
+        const registrarName = members?.get(interaction.user.id)?.displayName
+            || interaction.user.globalName
+            || interaction.user.username;
+        const authorName = members?.get(sourceMessage.author.id)?.displayName
+            || sourceMessage.member?.displayName
+            || sourceMessage.author.globalName
+            || sourceMessage.author.username;
+        const registrationNotice = (0, promotion_display_1.buildPromotionRegistrationNotice)(registrarName, authorName, sourceMessage.author.id === interaction.user.id);
         const notice = await promotionChannel.send({
             content: registrationNotice,
             allowedMentions: { parse: [] },
@@ -93,9 +103,7 @@ async function execute(interaction) {
             await notice.delete().catch(() => undefined);
             throw error;
         }
-        const displayName = interaction.member && "displayName" in interaction.member
-            ? interaction.member.displayName
-            : interaction.user.globalName || interaction.user.username;
+        const displayName = authorName;
         await database_1.db.promotionPost.create({
             guildId: interaction.guildId,
             userId: sourceMessage.author.id,

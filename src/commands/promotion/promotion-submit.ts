@@ -4,8 +4,10 @@ import {
     MessageContextMenuCommandInteraction,
 } from "discord.js";
 import { db } from "../../services/database";
+import { fetchGuildMembers } from "../../services/guild-members";
 import { PRIVATE_RESPONSE_FLAGS, withPrivateNotice } from "../../utils/private-response";
 import { hasPromotionAdminAccess } from "../../utils/promotion-permissions";
+import { buildPromotionRegistrationNotice } from "../../utils/promotion-display";
 
 const pendingUsers = new Set<string>();
 
@@ -92,9 +94,21 @@ export async function execute(interaction: MessageContextMenuCommandInteraction)
             });
         }
 
-        const registrationNotice = sourceMessage.author.id === interaction.user.id
-            ? `📢 <@${interaction.user.id}>님이 홍보로 등록했습니다.`
-            : `📢 관리자 <@${interaction.user.id}>님이 <@${sourceMessage.author.id}>님의 메시지를 홍보로 등록했습니다.`;
+        const members = interaction.guild
+            ? await fetchGuildMembers(interaction.guild).catch(() => interaction.guild!.members.cache)
+            : undefined;
+        const registrarName = members?.get(interaction.user.id)?.displayName
+            || interaction.user.globalName
+            || interaction.user.username;
+        const authorName = members?.get(sourceMessage.author.id)?.displayName
+            || sourceMessage.member?.displayName
+            || sourceMessage.author.globalName
+            || sourceMessage.author.username;
+        const registrationNotice = buildPromotionRegistrationNotice(
+            registrarName,
+            authorName,
+            sourceMessage.author.id === interaction.user.id
+        );
         const notice = await promotionChannel.send({
             content: registrationNotice,
             allowedMentions: { parse: [] },
@@ -106,9 +120,7 @@ export async function execute(interaction: MessageContextMenuCommandInteraction)
             await notice.delete().catch(() => undefined);
             throw error;
         }
-        const displayName = interaction.member && "displayName" in interaction.member
-            ? interaction.member.displayName
-            : interaction.user.globalName || interaction.user.username;
+        const displayName = authorName;
 
         await db.promotionPost.create({
             guildId: interaction.guildId,

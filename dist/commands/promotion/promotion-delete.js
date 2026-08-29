@@ -4,8 +4,10 @@ exports.data = void 0;
 exports.execute = execute;
 const discord_js_1 = require("discord.js");
 const database_1 = require("../../services/database");
+const guild_members_1 = require("../../services/guild-members");
 const private_response_1 = require("../../utils/private-response");
 const promotion_permissions_1 = require("../../utils/promotion-permissions");
+const promotion_display_1 = require("../../utils/promotion-display");
 const MENU_TIMEOUT_MS = 5 * 60 * 1000;
 function messageUrl(post) {
     return `https://discord.com/channels/${post.guildId}/${post.channelId}/${post.messageId}`;
@@ -118,10 +120,13 @@ async function execute(interaction) {
             content: (0, private_response_1.withPrivateNotice)("삭제할 수 있는 홍보가 없습니다."),
         });
     }
+    const members = interaction.guild
+        ? await (0, guild_members_1.fetchGuildMembers)(interaction.guild).catch(() => interaction.guild.members.cache)
+        : undefined;
     const embed = new discord_js_1.EmbedBuilder()
         .setColor(0x5865f2)
         .setTitle(hasAdminAccess ? "전체 홍보 관리" : "내 홍보 목록")
-        .setDescription(posts.map((post, index) => `**${index + 1}. ${post.title}**\n${hasAdminAccess ? `홍보자: <@${post.userId}> · ` : ""}${formatDate(post.createdAt)} · [게시물 보기](${messageUrl(post)})`).join("\n\n").slice(0, 4000));
+        .setDescription(posts.map((post, index) => `**${index + 1}. ${post.title}**\n${hasAdminAccess ? `홍보자: ${(0, promotion_display_1.formatPromotionDisplayName)(members?.get(post.userId)?.displayName || post.userId)} · ` : ""}${formatDate(post.createdAt)} · [게시물 보기](${messageUrl(post)})`).join("\n\n").slice(0, 4000));
     await interaction.editReply({
         content: (0, private_response_1.withPrivateNotice)("아래에서 삭제할 홍보를 선택해 주세요."),
         embeds: [embed],

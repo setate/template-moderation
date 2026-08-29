@@ -142,7 +142,11 @@ async function execute(interaction) {
                 content: (0, private_response_1.withPrivateNotice)("설정된 홍보 채널을 사용할 수 없습니다. 관리자에게 `/홍보설정`을 다시 요청해 주세요."),
             });
         }
-        const displayName = interaction.user.globalName || interaction.user.username;
+        const guildMember = interaction.guild?.members.cache.get(interaction.user.id)
+            || await interaction.guild?.members.fetch(interaction.user.id).catch(() => undefined);
+        const displayName = guildMember?.displayName
+            || interaction.user.globalName
+            || interaction.user.username;
         let linkPreview = null;
         if (link) {
             try {
@@ -168,7 +172,7 @@ async function execute(interaction) {
         })
             .addFields({
             name: "홍보자",
-            value: `<@${interaction.user.id}>`,
+            value: `**${(0, discord_js_1.escapeMarkdown)(displayName)}**`,
             inline: false,
         })
             .setTimestamp();

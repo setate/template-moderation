@@ -10,6 +10,7 @@ import { config } from "./config";
 import { commands } from "./commands";
 import { deployCommands } from "./deploy-commands";
 import { startScheduledJobs } from "./scheduler";
+import { repairLegacyPromotionMessages } from "./services/promotion-message-repair";
 import { PRIVATE_RESPONSE_FLAGS, withPrivateNotice } from "./utils/private-response";
 
 // Event handlers
@@ -58,6 +59,16 @@ client.once(Events.ClientReady, async () => {
     // 명령어 갱신
     console.log("Started refreshing application (/) commands.");
     await deployCommands();
+
+    // 기존 홍보의 해석되지 않는 사용자 멘션을 서버 표시명으로 교체합니다.
+    try {
+        const repairedCount = await repairLegacyPromotionMessages(client);
+        if (repairedCount > 0) {
+            console.log(`기존 홍보 메시지 ${repairedCount}개의 사용자 표시를 수정했습니다.`);
+        }
+    } catch (error) {
+        console.warn("기존 홍보 메시지 수정 중 오류가 발생했습니다:", error);
+    }
 
     // 스케줄러 시작
     startScheduledJobs(client);

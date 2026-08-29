@@ -1,6 +1,7 @@
 import {
     ChatInputCommandInteraction,
     EmbedBuilder,
+    escapeMarkdown,
     SlashCommandBuilder,
 } from "discord.js";
 import { db } from "../../services/database";
@@ -163,7 +164,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             });
         }
 
-        const displayName = interaction.user.globalName || interaction.user.username;
+        const guildMember = interaction.guild?.members.cache.get(interaction.user.id)
+            || await interaction.guild?.members.fetch(interaction.user.id).catch(() => undefined);
+        const displayName = guildMember?.displayName
+            || interaction.user.globalName
+            || interaction.user.username;
         let linkPreview: Awaited<ReturnType<typeof getLinkPreview>> = null;
         if (link) {
             try {
@@ -190,7 +195,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             })
             .addFields({
                 name: "홍보자",
-                value: `<@${interaction.user.id}>`,
+                value: `**${escapeMarkdown(displayName)}**`,
                 inline: false,
             })
             .setTimestamp();
