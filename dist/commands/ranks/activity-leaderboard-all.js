@@ -25,7 +25,7 @@ function buildPageButtons(page, pageCount, disabled = false) {
         .setDisabled(disabled || page >= pageCount - 1);
     return new discord_js_1.ActionRowBuilder().addComponents(previous, next);
 }
-function buildPageContent(ranking, page) {
+function buildPageContent(ranking, page, memberCoverageWarning) {
     const pageCount = Math.max(1, Math.ceil(ranking.length / PAGE_SIZE));
     const start = page * PAGE_SIZE;
     const lines = ranking.slice(start, start + PAGE_SIZE).map(({ member, messageCount }, index) => {
@@ -41,7 +41,8 @@ function buildPageContent(ranking, page) {
         ...lines,
         "",
         `페이지 **${page + 1}/${pageCount}** · 일반 멤버 **${ranking.length.toLocaleString()}명**`,
-    ].join("\n"));
+        memberCoverageWarning || "",
+    ].filter(Boolean).join("\n"));
 }
 exports.data = new discord_js_1.SlashCommandBuilder()
     .setName("activity-leaderboard-all")
@@ -63,6 +64,7 @@ async function execute(interaction) {
     }
     await interaction.deferReply({ flags: private_response_1.PRIVATE_RESPONSE_FLAGS });
     const guild = interaction.guild;
+    await interaction.editReply((0, private_response_1.withPrivateNotice)("서버 멤버 통계를 불러오는 중입니다…"));
     const [activities, members] = await Promise.all([
         database_1.db.memberActivity.findMany({ where: { guildId: guild.id } }),
         (0, guild_members_1.fetchGuildMembers)(guild),
@@ -73,13 +75,16 @@ async function execute(interaction) {
         .map(member => ({ member, messageCount: counts.get(member.id) || 0 }))
         .sort((a, b) => b.messageCount - a.messageCount
         || a.member.id.localeCompare(b.member.id));
+    const memberCoverageWarning = members.size < guild.memberCount
+        ? `⚠️ Discord의 멤버 응답이 늦어 캐시된 **${members.size.toLocaleString()}/${guild.memberCount.toLocaleString()}명**만 표시했습니다. 잠시 후 다시 실행하면 갱신됩니다.`
+        : undefined;
     if (ranking.length === 0) {
         return interaction.editReply((0, private_response_1.withPrivateNotice)("표시할 일반 멤버가 없습니다."));
     }
     let page = 0;
     const pageCount = Math.ceil(ranking.length / PAGE_SIZE);
     const reply = await interaction.editReply({
-        content: buildPageContent(ranking, page),
+        content: buildPageContent(ranking, page, memberCoverageWarning),
         components: [buildPageButtons(page, pageCount)],
         allowedMentions: { parse: [] },
     });
@@ -95,7 +100,7 @@ async function execute(interaction) {
                 ? Math.min(page + 1, pageCount - 1)
                 : Math.max(page - 1, 0);
             await interaction.editReply({
-                content: buildPageContent(ranking, page),
+                content: buildPageContent(ranking, page, memberCoverageWarning),
                 components: [buildPageButtons(page, pageCount)],
                 allowedMentions: { parse: [] },
             });
@@ -107,7 +112,7 @@ async function execute(interaction) {
     });
     collector.on("end", async () => {
         await interaction.editReply({
-            content: buildPageContent(ranking, page),
+            content: buildPageContent(ranking, page, memberCoverageWarning),
             components: [buildPageButtons(page, pageCount, true)],
             allowedMentions: { parse: [] },
         }).catch(() => undefined);
