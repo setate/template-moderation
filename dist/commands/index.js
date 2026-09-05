@@ -49,6 +49,7 @@ const rankStatus = __importStar(require("./ranks/rank-status"));
 const rankCriteria = __importStar(require("./ranks/rank-criteria"));
 const activityScan = __importStar(require("./ranks/activity-scan"));
 const activityLeaderboard = __importStar(require("./ranks/activity-leaderboard"));
+const activityLeaderboardAll = __importStar(require("./ranks/activity-leaderboard-all"));
 const activitySummary = __importStar(require("./ranks/activity-summary"));
 const promotionSetup = __importStar(require("./promotion/promotion-setup"));
 const promotionSubmit = __importStar(require("./promotion/promotion-submit"));
@@ -70,6 +71,7 @@ exports.commands = {
     "rank-criteria": rankCriteria,
     "activity-scan": activityScan,
     "activity-leaderboard": activityLeaderboard,
+    "activity-leaderboard-all": activityLeaderboardAll,
     "activity-summary": activitySummary,
     "promotion-setup": promotionSetup,
     "Promote Message": promotionSubmit,

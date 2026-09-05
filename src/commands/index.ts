@@ -21,6 +21,7 @@ import * as rankStatus from "./ranks/rank-status";
 import * as rankCriteria from "./ranks/rank-criteria";
 import * as activityScan from "./ranks/activity-scan";
 import * as activityLeaderboard from "./ranks/activity-leaderboard";
+import * as activityLeaderboardAll from "./ranks/activity-leaderboard-all";
 import * as activitySummary from "./ranks/activity-summary";
 
 // Promotion commands
@@ -45,6 +46,7 @@ export const commands = {
     "rank-criteria": rankCriteria,
     "activity-scan": activityScan,
     "activity-leaderboard": activityLeaderboard,
+    "activity-leaderboard-all": activityLeaderboardAll,
     "activity-summary": activitySummary,
     "promotion-setup": promotionSetup,
     "Promote Message": promotionSubmit,

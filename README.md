@@ -107,9 +107,10 @@
 | `/등급현황`     | 체류기간·메시지 수와 다음 등급 진행도 확인 | 모든 멤버 |
 | `/활동통계수집` | 접근 가능한 모든 과거 메시지를 다시 집계   | 서버 관리 |
 | `/활동순위`     | 메시지 활동량 상위 20명 확인               | 모든 멤버 |
+| `/전체활동순위` | 모든 일반 멤버의 메시지 수·체류기간 확인   | 서버 관리자 |
 | `/전체통계`     | 서버 전체 활동량과 등급별 인원 확인        | 모든 멤버 |
 
-> Discord에서 명령어가 영어로 표시되면 `/rank-criteria`, `/rank-status`, `/activity-scan`, `/activity-leaderboard`, `/activity-summary`를 사용하세요.
+> Discord에서 명령어가 영어로 표시되면 `/rank-criteria`, `/rank-status`, `/activity-scan`, `/activity-leaderboard`, `/activity-leaderboard-all`, `/activity-summary`를 사용하세요.
 > 모든 명령어 결과에는 `🔒 이 메시지는 본인에게만 표시됩니다.` 문구가 나오며, 실행한 사람 외에는 볼 수 없습니다.
 > 봇 역할은 `새내기`, `학사`, `석사`, `박사` 역할보다 위에 있어야 합니다.
 
