@@ -3,17 +3,16 @@ import {
     ButtonBuilder,
     ButtonStyle,
     ChatInputCommandInteraction,
-    escapeMarkdown,
     GuildMember,
     SlashCommandBuilder,
 } from "discord.js";
 import { db } from "../../services/database";
 import { fetchGuildMembers } from "../../services/guild-members";
-import { getTenureDays } from "../../services/ranking";
 import { hasServerAdminAccess } from "../../utils/admin-access";
 import { PRIVATE_RESPONSE_FLAGS, withPrivateNotice } from "../../utils/private-response";
+import { formatActivityRankLine } from "./activity-leaderboard-format";
 
-const PAGE_SIZE = 15;
+const PAGE_SIZE = 20;
 const MENU_TIMEOUT_MS = 5 * 60 * 1000;
 const PREVIOUS_PAGE_ID = "activity-leaderboard-all-previous";
 const NEXT_PAGE_ID = "activity-leaderboard-all-next";
@@ -45,17 +44,14 @@ function buildPageContent(
 ): string {
     const pageCount = Math.max(1, Math.ceil(ranking.length / PAGE_SIZE));
     const start = page * PAGE_SIZE;
-    const lines = ranking.slice(start, start + PAGE_SIZE).map(({ member, messageCount }, index) => {
-        const position = start + index + 1;
-        const colorRole = member.roles.color;
-        const colorRoleTag = colorRole ? ` ${colorRole.toString()}` : "";
-        const displayName = escapeMarkdown(member.displayName);
-        const tenureDays = getTenureDays(member);
-        return `**${position}. ${displayName}**${colorRoleTag} — **${messageCount.toLocaleString()}개** · 체류 **${tenureDays.toLocaleString()}일**`;
-    });
+    const lines = ranking
+        .slice(start, start + PAGE_SIZE)
+        .map(({ member, messageCount }, index) =>
+            formatActivityRankLine(member, messageCount, start + index)
+        );
 
     return withPrivateNotice([
-        "## 📋 전체 활동 순위",
+        "## 📊 전체 활동 순위",
         ...lines,
         "",
         `페이지 **${page + 1}/${pageCount}** · 일반 멤버 **${ranking.length.toLocaleString()}명**`,

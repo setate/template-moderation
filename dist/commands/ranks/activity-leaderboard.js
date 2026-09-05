@@ -5,8 +5,8 @@ exports.execute = execute;
 const discord_js_1 = require("discord.js");
 const database_1 = require("../../services/database");
 const guild_members_1 = require("../../services/guild-members");
-const ranking_1 = require("../../services/ranking");
 const private_response_1 = require("../../utils/private-response");
+const activity_leaderboard_format_1 = require("./activity-leaderboard-format");
 exports.data = new discord_js_1.SlashCommandBuilder()
     .setName('activity-leaderboard')
     .setNameLocalizations({ ko: '활동순위' })
@@ -33,15 +33,7 @@ async function execute(interaction) {
     if (top.length === 0) {
         return interaction.editReply((0, private_response_1.withPrivateNotice)('아직 집계된 메시지가 없습니다. 관리자가 `/활동통계수집`을 먼저 실행해 주세요.'));
     }
-    const medal = ['🥇', '🥈', '🥉'];
-    const lines = top.map(({ activity, member }, index) => {
-        const rank = medal[index] || `**${index + 1}.**`;
-        const tenureDays = (0, ranking_1.getTenureDays)(member);
-        const colorRole = member.roles.color;
-        const colorRoleTag = colorRole ? ` ${colorRole.toString()}` : '';
-        const displayName = (0, discord_js_1.escapeMarkdown)(member.displayName);
-        return `${rank} **${displayName}**${colorRoleTag} — **${activity.messageCount.toLocaleString()}개** · 체류 **${tenureDays.toLocaleString()}일**`;
-    });
+    const lines = top.map(({ activity, member }, index) => (0, activity_leaderboard_format_1.formatActivityRankLine)(member, activity.messageCount, index));
     return interaction.editReply({
         content: (0, private_response_1.withPrivateNotice)([`## 📊 활동 순위 TOP 20`, ...lines].join('\n')),
         allowedMentions: { parse: [] },

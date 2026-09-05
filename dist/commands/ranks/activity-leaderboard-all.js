@@ -5,10 +5,10 @@ exports.execute = execute;
 const discord_js_1 = require("discord.js");
 const database_1 = require("../../services/database");
 const guild_members_1 = require("../../services/guild-members");
-const ranking_1 = require("../../services/ranking");
 const admin_access_1 = require("../../utils/admin-access");
 const private_response_1 = require("../../utils/private-response");
-const PAGE_SIZE = 15;
+const activity_leaderboard_format_1 = require("./activity-leaderboard-format");
+const PAGE_SIZE = 20;
 const MENU_TIMEOUT_MS = 5 * 60 * 1000;
 const PREVIOUS_PAGE_ID = "activity-leaderboard-all-previous";
 const NEXT_PAGE_ID = "activity-leaderboard-all-next";
@@ -28,16 +28,11 @@ function buildPageButtons(page, pageCount, disabled = false) {
 function buildPageContent(ranking, page, memberCoverageWarning) {
     const pageCount = Math.max(1, Math.ceil(ranking.length / PAGE_SIZE));
     const start = page * PAGE_SIZE;
-    const lines = ranking.slice(start, start + PAGE_SIZE).map(({ member, messageCount }, index) => {
-        const position = start + index + 1;
-        const colorRole = member.roles.color;
-        const colorRoleTag = colorRole ? ` ${colorRole.toString()}` : "";
-        const displayName = (0, discord_js_1.escapeMarkdown)(member.displayName);
-        const tenureDays = (0, ranking_1.getTenureDays)(member);
-        return `**${position}. ${displayName}**${colorRoleTag} — **${messageCount.toLocaleString()}개** · 체류 **${tenureDays.toLocaleString()}일**`;
-    });
+    const lines = ranking
+        .slice(start, start + PAGE_SIZE)
+        .map(({ member, messageCount }, index) => (0, activity_leaderboard_format_1.formatActivityRankLine)(member, messageCount, start + index));
     return (0, private_response_1.withPrivateNotice)([
-        "## 📋 전체 활동 순위",
+        "## 📊 전체 활동 순위",
         ...lines,
         "",
         `페이지 **${page + 1}/${pageCount}** · 일반 멤버 **${ranking.length.toLocaleString()}명**`,
