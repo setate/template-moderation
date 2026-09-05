@@ -6,6 +6,7 @@ const discord_js_1 = require("discord.js");
 const database_1 = require("../../services/database");
 const guild_members_1 = require("../../services/guild-members");
 const ranking_1 = require("../../services/ranking");
+const admin_access_1 = require("../../utils/admin-access");
 const private_response_1 = require("../../utils/private-response");
 const PAGE_SIZE = 15;
 const MENU_TIMEOUT_MS = 5 * 60 * 1000;
@@ -46,8 +47,7 @@ exports.data = new discord_js_1.SlashCommandBuilder()
     .setName("activity-leaderboard-all")
     .setNameLocalizations({ ko: "전체활동순위" })
     .setDescription("Show activity statistics for every non-bot member")
-    .setDescriptionLocalizations({ ko: "모든 일반 멤버의 메시지 수와 체류기간을 순위로 보여줍니다" })
-    .setDefaultMemberPermissions(discord_js_1.PermissionFlagsBits.ManageGuild);
+    .setDescriptionLocalizations({ ko: "모든 일반 멤버의 메시지 수와 체류기간을 순위로 보여줍니다" });
 async function execute(interaction) {
     if (!interaction.guild) {
         return interaction.reply({
@@ -55,9 +55,9 @@ async function execute(interaction) {
             flags: private_response_1.PRIVATE_RESPONSE_FLAGS,
         });
     }
-    if (!interaction.memberPermissions?.has(discord_js_1.PermissionFlagsBits.ManageGuild)) {
+    if (!await (0, admin_access_1.hasServerAdminAccess)(interaction)) {
         return interaction.reply({
-            content: (0, private_response_1.withPrivateNotice)("서버 관리 권한이 있는 관리자만 사용할 수 있습니다."),
+            content: (0, private_response_1.withPrivateNotice)("서버 관리자만 사용할 수 있습니다."),
             flags: private_response_1.PRIVATE_RESPONSE_FLAGS,
         });
     }

@@ -111,6 +111,7 @@
 | `/전체통계`     | 서버 전체 활동량과 등급별 인원 확인        | 모든 멤버 |
 
 > Discord에서 명령어가 영어로 표시되면 `/rank-criteria`, `/rank-status`, `/activity-scan`, `/activity-leaderboard`, `/activity-leaderboard-all`, `/activity-summary`를 사용하세요.
+> `/전체활동순위`는 서버 소유자, Discord 관리자 권한 보유자, `probe` 또는 `admin` 역할 보유자만 실행할 수 있습니다.
 > 모든 명령어 결과에는 `🔒 이 메시지는 본인에게만 표시됩니다.` 문구가 나오며, 실행한 사람 외에는 볼 수 없습니다.
 > 봇 역할은 `새내기`, `학사`, `석사`, `박사` 역할보다 위에 있어야 합니다.
 

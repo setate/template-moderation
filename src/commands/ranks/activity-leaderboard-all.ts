@@ -5,12 +5,12 @@ import {
     ChatInputCommandInteraction,
     escapeMarkdown,
     GuildMember,
-    PermissionFlagsBits,
     SlashCommandBuilder,
 } from "discord.js";
 import { db } from "../../services/database";
 import { fetchGuildMembers } from "../../services/guild-members";
 import { getTenureDays } from "../../services/ranking";
+import { hasServerAdminAccess } from "../../utils/admin-access";
 import { PRIVATE_RESPONSE_FLAGS, withPrivateNotice } from "../../utils/private-response";
 
 const PAGE_SIZE = 15;
@@ -62,8 +62,7 @@ export const data = new SlashCommandBuilder()
     .setName("activity-leaderboard-all")
     .setNameLocalizations({ ko: "전체활동순위" })
     .setDescription("Show activity statistics for every non-bot member")
-    .setDescriptionLocalizations({ ko: "모든 일반 멤버의 메시지 수와 체류기간을 순위로 보여줍니다" })
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild);
+    .setDescriptionLocalizations({ ko: "모든 일반 멤버의 메시지 수와 체류기간을 순위로 보여줍니다" });
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guild) {
@@ -72,9 +71,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             flags: PRIVATE_RESPONSE_FLAGS,
         });
     }
-    if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+    if (!await hasServerAdminAccess(interaction)) {
         return interaction.reply({
-            content: withPrivateNotice("서버 관리 권한이 있는 관리자만 사용할 수 있습니다."),
+            content: withPrivateNotice("서버 관리자만 사용할 수 있습니다."),
             flags: PRIVATE_RESPONSE_FLAGS,
         });
     }
