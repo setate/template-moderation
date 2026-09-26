@@ -46,14 +46,21 @@ async function syncMemberRankNow(member, messageCount) {
         return false;
     }
     let changed = false;
-    if (!member.roles.cache.has(targetRole.id)) {
-        await member.roles.add(targetRole, '서버 체류기간 및 메시지 활동량 자동 등급');
+    let updatedMember = member;
+    if (!updatedMember.roles.cache.has(targetRole.id)) {
+        updatedMember = await updatedMember.roles.add(targetRole, '서버 체류기간 및 메시지 활동량 자동 등급');
         changed = true;
     }
-    const rolesToRemove = rankRoles.filter(role => role.id !== targetRole.id && member.roles.cache.has(role.id));
-    if (rolesToRemove.length > 0) {
-        await member.roles.remove(rolesToRemove, '자동 등급 중복 정리');
+    const rolesToRemove = rankRoles.filter(role => role.id !== targetRole.id && updatedMember.roles.cache.has(role.id));
+    for (const role of rolesToRemove) {
+        if (!updatedMember.roles.cache.has(targetRole.id)) {
+            throw new Error(`목표 등급 역할이 확인되지 않아 이전 역할 제거를 중단했습니다: ${targetRank.name}`);
+        }
+        updatedMember = await updatedMember.roles.remove(role, '자동 등급 중복 정리');
         changed = true;
+    }
+    if (!updatedMember.roles.cache.has(targetRole.id)) {
+        throw new Error(`등급 동기화 후 목표 역할이 없습니다: ${targetRank.name}`);
     }
     if (changed) {
         console.log(`[ranking] ${member.user.tag}: ${targetRank.name} (${messageCount} messages)`);

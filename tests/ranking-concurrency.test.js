@@ -32,6 +32,7 @@ function createMember(initialRoleName = '새내기') {
         await wait(10);
         change();
         activeRoleChanges -= 1;
+        return member;
     }
 
     const member = {
@@ -79,4 +80,74 @@ test('등급 역할이 없는 멤버는 다음 동기화에서 현재 등급을 
     await syncMemberRank(fixture.member, 300);
 
     assert.deepEqual(fixture.getRoleNames(), ['석사']);
+});
+
+function createDiscordLikeStaleCacheMember() {
+    const roleNames = ['새내기', '학사', '석사', '박사'];
+    const guildRoles = new FindableMap(
+        roleNames.map((name, index) => [`role-${index}`, { id: `role-${index}`, name }])
+    );
+    const serverRoleIds = new Set(['role-0', 'role-1']);
+    const roleCounts = [serverRoleIds.size];
+    const removalArguments = [];
+    const guild = {
+        id: 'guild-stale-cache',
+        name: 'test-guild',
+        roles: {
+            cache: guildRoles,
+            resolveId: role => typeof role === 'string' ? role : role.id,
+        },
+    };
+
+    function snapshot() {
+        const cache = new FindableMap(
+            [...serverRoleIds].map(roleId => [roleId, guildRoles.get(roleId)])
+        );
+        const member = {
+            id: 'member-stale-cache',
+            joinedTimestamp: Date.now() - (31 * 86_400_000),
+            user: { bot: false, tag: 'member#0002' },
+            guild,
+            roles: {
+                cache,
+                add: async role => {
+                    serverRoleIds.add(role.id);
+                    roleCounts.push(serverRoleIds.size);
+                    return snapshot();
+                },
+                remove: async roleOrRoles => {
+                    removalArguments.push(roleOrRoles);
+                    if (Array.isArray(roleOrRoles)) {
+                        // discord.js의 복수 역할 제거는 이 스냅샷의 전체 캐시로 PATCH합니다.
+                        const removedIds = new Set(roleOrRoles.map(role => role.id));
+                        const replacement = [...cache.keys()].filter(roleId => !removedIds.has(roleId));
+                        serverRoleIds.clear();
+                        for (const roleId of replacement) serverRoleIds.add(roleId);
+                    } else {
+                        serverRoleIds.delete(roleOrRoles.id);
+                    }
+                    roleCounts.push(serverRoleIds.size);
+                    return snapshot();
+                },
+            },
+        };
+        return member;
+    }
+
+    return {
+        member: snapshot(),
+        getRoleNames: () => [...serverRoleIds].map(roleId => guildRoles.get(roleId).name),
+        getMinimumRoleCount: () => Math.min(...roleCounts),
+        getRemovalArguments: () => removalArguments,
+    };
+}
+
+test('승급 중에도 등급 역할을 최소 하나 유지한다', async () => {
+    const fixture = createDiscordLikeStaleCacheMember();
+
+    await syncMemberRank(fixture.member, 300);
+
+    assert.deepEqual(fixture.getRoleNames(), ['석사']);
+    assert.ok(fixture.getMinimumRoleCount() >= 1);
+    assert.ok(fixture.getRemovalArguments().every(role => !Array.isArray(role)));
 });

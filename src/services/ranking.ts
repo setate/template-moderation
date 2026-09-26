@@ -53,17 +53,34 @@ async function syncMemberRankNow(member: GuildMember, messageCount: number): Pro
     }
 
     let changed = false;
-    if (!member.roles.cache.has(targetRole.id)) {
-        await member.roles.add(targetRole, '서버 체류기간 및 메시지 활동량 자동 등급');
+    let updatedMember = member;
+    if (!updatedMember.roles.cache.has(targetRole.id)) {
+        // 단일 역할 추가는 새 상태가 반영된 GuildMember 복제본을 반환합니다.
+        // 이 반환값을 사용해야 바로 뒤의 역할 정리가 오래된 캐시를 사용하지 않습니다.
+        updatedMember = await updatedMember.roles.add(
+            targetRole,
+            '서버 체류기간 및 메시지 활동량 자동 등급'
+        );
         changed = true;
     }
 
     const rolesToRemove = rankRoles.filter(
-        role => role.id !== targetRole.id && member.roles.cache.has(role.id)
+        role => role.id !== targetRole.id && updatedMember.roles.cache.has(role.id)
     );
-    if (rolesToRemove.length > 0) {
-        await member.roles.remove(rolesToRemove, '자동 등급 중복 정리');
+
+    // 여러 역할을 배열로 한꺼번에 remove하면 discord.js가 오래된 전체 역할 목록으로
+    // PATCH하여 방금 추가한 등급까지 누락시킬 수 있습니다. 단일 DELETE를 순서대로
+    // 사용하면 목표 등급은 그대로 둔 채 이전 등급만 안전하게 제거할 수 있습니다.
+    for (const role of rolesToRemove) {
+        if (!updatedMember.roles.cache.has(targetRole.id)) {
+            throw new Error(`목표 등급 역할이 확인되지 않아 이전 역할 제거를 중단했습니다: ${targetRank.name}`);
+        }
+        updatedMember = await updatedMember.roles.remove(role, '자동 등급 중복 정리');
         changed = true;
+    }
+
+    if (!updatedMember.roles.cache.has(targetRole.id)) {
+        throw new Error(`등급 동기화 후 목표 역할이 없습니다: ${targetRank.name}`);
     }
 
     if (changed) {
